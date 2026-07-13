@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LayoutDashboardIcon, LogOutIcon, User, UserIcon } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
    DropdownMenu,
    DropdownMenuContent,
@@ -24,6 +24,9 @@ export default function Header() {
 
    const displayName = profile?.name || user?.email || "Account";
    const initials = displayName.slice(0, 2).toUpperCase();
+   const avatarUrl =
+      (user?.user_metadata?.avatar_url as string | undefined) ??
+      (user?.user_metadata?.picture as string | undefined);
 
    const handleLogout = async () => {
       await logout();
@@ -51,6 +54,7 @@ export default function Header() {
                   <DropdownMenuTrigger asChild>
                      <button type="button" className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
                         <Avatar>
+                           {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
                            <AvatarFallback>{initials}</AvatarFallback>
                         </Avatar>
                      </button>

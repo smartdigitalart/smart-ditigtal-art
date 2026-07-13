@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { Loader2, MailIcon } from "lucide-react"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -66,11 +66,15 @@ export default function ProfilePage() {
   }
 
   const initials = (profile?.name || user?.email || "U").slice(0, 2).toUpperCase()
+  const avatarUrl =
+    (user?.user_metadata?.avatar_url as string | undefined) ??
+    (user?.user_metadata?.picture as string | undefined)
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 px-4 py-12">
       <div className="flex items-center gap-3">
         <Avatar size="lg">
+          {avatarUrl && <AvatarImage src={avatarUrl} alt={profile?.name ?? "Profile"} />}
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div>
