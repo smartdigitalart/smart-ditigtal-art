@@ -1,6 +1,8 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   EyeIcon,
   FileTextIcon,
@@ -32,57 +34,39 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import {
-  BLOG_CATEGORIES,
-  BLOG_STATUSES,
-  generateBlogPosts,
-  type BlogPost,
-} from "@/lib/mock-blogs"
+import { useAdminBlogs, useDeleteAdminBlog } from "@/lib/api/use-admin-blogs"
+import { BLOG_STATUSES, type Blog } from "@/lib/types/blog"
 
-const CATEGORY_ITEMS = [
-  { label: "All Categories", value: "all" },
-  ...BLOG_CATEGORIES.map((c) => ({ label: c, value: c })),
-]
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
   ...BLOG_STATUSES.map((s) => ({ label: s, value: s })),
 ]
 
-const STATUS_STYLES: Record<BlogPost["status"], string> = {
+const STATUS_STYLES: Record<Blog["status"], string> = {
   Published: "bg-chart-2/10 text-chart-2",
   Draft: "bg-muted text-muted-foreground",
   Scheduled: "bg-chart-4/10 text-chart-4",
 }
 
 export default function BlogsPage() {
-  const [loading, setLoading] = useState(true)
-  const [posts, setPosts] = useState<BlogPost[]>([])
+  const router = useRouter()
+  const { data, isLoading: loading } = useAdminBlogs()
+  const deleteBlog = useDeleteAdminBlog()
+  const posts = data?.items ?? []
   const [search, setSearch] = useState("")
-  const [category, setCategory] = useState("all")
   const [status, setStatus] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPosts(generateBlogPosts(36))
-      setLoading(false)
-    }, 900)
-    return () => clearTimeout(timer)
-  }, [])
-
   const filtered = useMemo(() => {
     return posts.filter((post) => {
-      if (category !== "all" && post.category !== category) return false
       if (status !== "all" && post.status !== status) return false
       return true
     })
-  }, [posts, category, status])
+  }, [posts, status])
 
-  const hasActiveFilters =
-    category !== "all" || status !== "all" || search !== ""
+  const hasActiveFilters = status !== "all" || search !== ""
 
   const resetFilters = () => {
-    setCategory("all")
     setStatus("all")
     setSearch("")
   }
@@ -94,10 +78,10 @@ export default function BlogsPage() {
   const selectedCount = selectedIndexes.length
 
   const handleBulkDelete = () => {
-    const idsToRemove = new Set(
-      selectedIndexes.map((index) => filtered[Number(index)]?.id)
-    )
-    setPosts((prev) => prev.filter((post) => !idsToRemove.has(post.id)))
+    const idsToRemove = selectedIndexes
+      .map((index) => filtered[Number(index)]?.id)
+      .filter((id): id is string => !!id)
+    void Promise.all(idsToRemove.map((id) => deleteBlog.mutateAsync(id)))
     toast.error(`Deleted ${selectedCount} post${selectedCount > 1 ? "s" : ""}`)
     setRowSelection({})
   }
@@ -105,46 +89,38 @@ export default function BlogsPage() {
   const stats = useMemo(
     () => ({
       total: posts.length,
-      categories: new Set(posts.map((p) => p.category)).size,
+      categories: new Set(posts.map((p) => p.category).filter(Boolean)).size,
       published: posts.filter((p) => p.status === "Published").length,
       drafts: posts.filter((p) => p.status === "Draft").length,
     }),
     [posts]
   )
 
-  const columns = useMemo<ColumnDef<BlogPost>[]>(
+  const columns = useMemo<ColumnDef<Blog>[]>(
     () => [
-      createSelectColumn<BlogPost>(),
+      createSelectColumn<Blog>(),
       {
         accessorKey: "title",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Post" />
         ),
         cell: ({ row }) => (
-          <div className="flex items-center gap-3">
+          <Link
+            href={`/admin/blogs/${row.original.id}/edit`}
+            className="group flex items-center gap-3"
+          >
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
               <FileTextIcon className="size-4 text-muted-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="font-medium text-foreground">
+              <span className="font-medium text-foreground group-hover:text-secondary">
                 {row.original.title}
               </span>
               <span className="text-xs text-muted-foreground">
-                {row.original.author}
+                {row.original.author ?? "—"}
               </span>
             </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "category",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Category" />
-        ),
-        cell: ({ row }) => (
-          <span className="text-sm text-foreground">
-            {row.original.category}
-          </span>
+          </Link>
         ),
       },
       {
@@ -165,7 +141,9 @@ export default function BlogsPage() {
         ),
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
-            {new Date(row.original.publishedAt).toLocaleDateString()}
+            {row.original.publishedAt
+              ? new Date(row.original.publishedAt).toLocaleDateString()
+              : "—"}
           </span>
         ),
       },
@@ -194,17 +172,17 @@ export default function BlogsPage() {
             {
               label: "Edit",
               icon: <PencilIcon />,
-              onClick: () => toast.info(`Editing ${row.original.title}`),
+              onClick: () => router.push(`/admin/blogs/${row.original.id}/edit`),
             },
             {
               label: "Delete",
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
-              onClick: () =>
-                setPosts((prev) =>
-                  prev.filter((post) => post.id !== row.original.id)
-                ),
+              onClick: () => {
+                void deleteBlog.mutateAsync(row.original.id)
+                toast.error(`Deleted ${row.original.title}`)
+              },
             },
           ]
           return <DataTableRowActions actions={actions} />
@@ -212,7 +190,7 @@ export default function BlogsPage() {
         size: 40,
       },
     ],
-    []
+    [router, deleteBlog]
   )
 
   return (
@@ -221,9 +199,11 @@ export default function BlogsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Blogs
         </h1>
-        <Button onClick={() => toast.info("Blog editor coming soon")}>
-          <PlusIcon data-icon="inline-start" />
-          Add Post
+        <Button asChild>
+          <Link href="/admin/blogs/add">
+            <PlusIcon data-icon="inline-start" />
+            Add Post
+          </Link>
         </Button>
       </div>
 
@@ -273,44 +253,23 @@ export default function BlogsPage() {
           )
         }
         filters={
-          <>
-            <Select
-              items={CATEGORY_ITEMS}
-              value={category}
-              onValueChange={(value) => setCategory(value ?? "all")}
-            >
-              <SelectTrigger size="sm" className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {CATEGORY_ITEMS.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Select
-              items={STATUS_ITEMS}
-              value={status}
-              onValueChange={(value) => setStatus(value ?? "all")}
-            >
-              <SelectTrigger size="sm" className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {STATUS_ITEMS.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </>
+          <Select
+            value={status}
+            onValueChange={(value) => setStatus(value ?? "all")}
+          >
+            <SelectTrigger size="sm" className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {STATUS_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         }
       />
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -44,7 +44,8 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import { generateOrders, type Order, type OrderStatus } from "@/lib/mock-orders"
+import { useAdminOrders, useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
+import { type Order, type OrderStatus } from "@/lib/types/order"
 
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
@@ -73,19 +74,12 @@ const BULK_STATUS_OPTIONS: { label: string; value: OrderStatus; icon: React.Reac
 
 export default function OrdersPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [orders, setOrders] = useState<Order[]>([])
+  const { data, isLoading: loading } = useAdminOrders()
+  const updateStatus = useUpdateOrderStatus()
+  const orders = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setOrders(generateOrders(64))
-      setLoading(false)
-    }, 900)
-    return () => clearTimeout(timer)
-  }, [])
 
   const filtered = useMemo(() => {
     return orders.filter((order) => {
@@ -108,20 +102,16 @@ export default function OrdersPage() {
   const selectedCount = selectedIndexes.length
 
   const handleBulkDelete = () => {
-    const idsToRemove = new Set(
-      selectedIndexes.map((index) => filtered[Number(index)]?.id)
-    )
-    setOrders((prev) => prev.filter((o) => !idsToRemove.has(o.id)))
-    toast.error(`Deleted ${selectedCount} order${selectedCount > 1 ? "s" : ""}`)
+    toast.error("Orders can't be deleted here.")
     setRowSelection({})
   }
 
   const handleBulkStatusUpdate = (newStatus: OrderStatus) => {
-    const idsToUpdate = new Set(
-      selectedIndexes.map((index) => filtered[Number(index)]?.id)
-    )
-    setOrders((prev) =>
-      prev.map((o) => (idsToUpdate.has(o.id) ? { ...o, status: newStatus } : o))
+    const idsToUpdate = selectedIndexes
+      .map((index) => filtered[Number(index)]?.id)
+      .filter((id): id is string => !!id)
+    void Promise.all(
+      idsToUpdate.map((id) => updateStatus.mutateAsync({ id, status: newStatus }))
     )
     toast.success(
       `Marked ${selectedCount} order${selectedCount > 1 ? "s" : ""} as ${newStatus}`
@@ -229,13 +219,6 @@ export default function OrdersPage() {
               icon: <EyeIcon />,
               onClick: () => router.push(`/admin/orders/${row.original.id}`),
             },
-            {
-              label: "Delete",
-              icon: <Trash2Icon />,
-              destructive: true,
-              separatorBefore: true,
-              onClick: () => toast.error(`Deleted ${row.original.id}`),
-            },
           ]
           return <DataTableRowActions actions={actions} />
         },
@@ -294,14 +277,12 @@ export default function OrdersPage() {
           selectedCount > 0 && (
             <div className="flex items-center gap-2">
               <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button variant="outline" size="sm">
-                      Set status
-                      <ChevronDownIcon data-icon="inline-end" />
-                    </Button>
-                  }
-                />
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    Set status
+                    <ChevronDownIcon data-icon="inline-end" />
+                  </Button>
+                </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   <DropdownMenuGroup>
                     {BULK_STATUS_OPTIONS.map((option) => (
@@ -325,7 +306,6 @@ export default function OrdersPage() {
         }
         filters={
           <Select
-            items={STATUS_ITEMS}
             value={status}
             onValueChange={(value) => setStatus(value ?? "all")}
           >

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -34,12 +34,16 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import { generateCategories, type Category } from "@/lib/mock-categories"
+import {
+  useAdminCategories,
+  useDeleteAdminCategory,
+} from "@/lib/api/use-admin-categories"
+import type { Category } from "@/lib/types/category"
 
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
-  { label: "Active", value: "Active" },
-  { label: "Inactive", value: "Inactive" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
 ]
 const PARENT_ITEMS = [
   { label: "All Categories", value: "all" },
@@ -48,26 +52,19 @@ const PARENT_ITEMS = [
 ]
 
 const STATUS_STYLES: Record<Category["status"], string> = {
-  Active: "bg-chart-2/10 text-chart-2",
-  Inactive: "bg-muted text-muted-foreground",
+  ACTIVE: "bg-chart-2/10 text-chart-2",
+  INACTIVE: "bg-muted text-muted-foreground",
 }
 
 export default function CategoriesPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [categories, setCategories] = useState<Category[]>([])
+  const { data, isLoading: loading } = useAdminCategories()
+  const deleteCategory = useDeleteAdminCategory()
+  const categories = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [parentFilter, setParentFilter] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCategories(generateCategories(20))
-      setLoading(false)
-    }, 900)
-    return () => clearTimeout(timer)
-  }, [])
 
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c])),
@@ -99,10 +96,10 @@ export default function CategoriesPage() {
   const selectedCount = selectedIndexes.length
 
   const handleBulkDelete = () => {
-    const idsToRemove = new Set(
-      selectedIndexes.map((index) => filtered[Number(index)]?.id)
-    )
-    setCategories((prev) => prev.filter((c) => !idsToRemove.has(c.id)))
+    const idsToRemove = selectedIndexes
+      .map((index) => filtered[Number(index)]?.id)
+      .filter((id): id is string => !!id)
+    void Promise.all(idsToRemove.map((id) => deleteCategory.mutateAsync(id)))
     toast.error(
       `Deleted ${selectedCount} categor${selectedCount > 1 ? "ies" : "y"}`
     )
@@ -112,7 +109,7 @@ export default function CategoriesPage() {
   const stats = useMemo(
     () => ({
       total: categories.length,
-      active: categories.filter((c) => c.status === "Active").length,
+      active: categories.filter((c) => c.status === "ACTIVE").length,
       topLevel: categories.filter((c) => !c.parentId).length,
       products: categories.reduce((sum, c) => sum + c.productCount, 0),
     }),
@@ -208,7 +205,10 @@ export default function CategoriesPage() {
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
-              onClick: () => toast.error(`Deleted ${row.original.name}`),
+              onClick: () => {
+                void deleteCategory.mutateAsync(row.original.id)
+                toast.error(`Deleted ${row.original.name}`)
+              },
             },
           ]
           return <DataTableRowActions actions={actions} />
@@ -216,7 +216,7 @@ export default function CategoriesPage() {
         size: 40,
       },
     ],
-    [router, categoryById]
+    [router, categoryById, deleteCategory]
   )
 
   return (
@@ -225,9 +225,11 @@ export default function CategoriesPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Categories
         </h1>
-        <Button render={<Link href="/admin/categories/add" />}>
-          <PlusIcon data-icon="inline-start" />
-          Add Category
+        <Button asChild>
+          <Link href="/admin/categories/add">
+            <PlusIcon data-icon="inline-start" />
+            Add Category
+          </Link>
         </Button>
       </div>
 
@@ -279,7 +281,6 @@ export default function CategoriesPage() {
         filters={
           <>
             <Select
-              items={PARENT_ITEMS}
               value={parentFilter}
               onValueChange={(value) => setParentFilter(value ?? "all")}
             >
@@ -297,7 +298,6 @@ export default function CategoriesPage() {
               </SelectContent>
             </Select>
             <Select
-              items={STATUS_ITEMS}
               value={status}
               onValueChange={(value) => setStatus(value ?? "all")}
             >

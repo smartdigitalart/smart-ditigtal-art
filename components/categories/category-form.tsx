@@ -255,7 +255,6 @@ export function CategoryForm({ category }: { category?: Category }) {
                   <Field>
                     <FieldLabel htmlFor="parentId">Parent category</FieldLabel>
                     <Select
-                      items={parentItems}
                       value={watch("parentId")}
                       onValueChange={(value) =>
                         value && setValue("parentId", value)
@@ -279,7 +278,6 @@ export function CategoryForm({ category }: { category?: Category }) {
                   <Field>
                     <FieldLabel htmlFor="status">Status</FieldLabel>
                     <Select
-                      items={STATUS_ITEMS}
                       value={watch("status")}
                       onValueChange={(value) =>
                         value &&

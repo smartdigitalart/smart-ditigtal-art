@@ -51,55 +51,59 @@ export function NavMain({
           item.items?.length ? (
             <Collapsible
               key={item.title}
+              asChild
               defaultOpen={
                 item.isActive || item.items.some((subItem) => isItemActive(subItem.url))
               }
               className="group/collapsible"
-              render={<SidebarMenuItem />}
             >
-              <CollapsibleTrigger
-                render={
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
                   <SidebarMenuButton
                     tooltip={item.title}
                     isActive={
                       isItemActive(item.url) ||
                       item.items.some((subItem) => isItemActive(subItem.url))
                     }
-                  />
-                }
-              >
-                {item.icon}
-                <span className="truncate group-data-[collapsible=icon]:hidden">
-                  {item.title}
-                </span>
-                <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton
-                        isActive={isItemActive(subItem.url)}
-                        render={<Link href={subItem.url} onClick={closeOnMobile} />}
-                      >
-                        <span>{subItem.title}</span>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
+                  >
+                    {item.icon}
+                    <span className="truncate group-data-[collapsible=icon]:hidden">
+                      {item.title}
+                    </span>
+                    <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items.map((subItem) => (
+                      <SidebarMenuSubItem key={subItem.title}>
+                        <SidebarMenuSubButton
+                          isActive={isItemActive(subItem.url)}
+                          asChild
+                        >
+                          <Link href={subItem.url} onClick={closeOnMobile}>
+                            <span>{subItem.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
             </Collapsible>
           ) : (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 tooltip={item.title}
                 isActive={item.isActive || isItemActive(item.url)}
-                render={<Link href={item.url} onClick={closeOnMobile} />}
+                asChild
               >
-                {item.icon}
-                <span className="truncate group-data-[collapsible=icon]:hidden">
-                  {item.title}
-                </span>
+                <Link href={item.url} onClick={closeOnMobile}>
+                  {item.icon}
+                  <span className="truncate group-data-[collapsible=icon]:hidden">
+                    {item.title}
+                  </span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )

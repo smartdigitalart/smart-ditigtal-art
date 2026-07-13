@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -36,7 +36,8 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import { generateCustomers, type Customer } from "@/lib/mock-customers"
+import { useAdminCustomers, useUpdateAdminCustomer } from "@/lib/api/use-admin-customers"
+import type { Customer } from "@/lib/types/customer"
 
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
@@ -51,19 +52,12 @@ const STATUS_STYLES: Record<Customer["status"], string> = {
 
 export default function CustomersPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [customers, setCustomers] = useState<Customer[]>([])
+  const { data, isLoading: loading } = useAdminCustomers()
+  const updateCustomer = useUpdateAdminCustomer()
+  const customers = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCustomers(generateCustomers(56))
-      setLoading(false)
-    }, 900)
-    return () => clearTimeout(timer)
-  }, [])
 
   const filtered = useMemo(() => {
     return customers.filter((customer) => {
@@ -86,12 +80,8 @@ export default function CustomersPage() {
   const selectedCount = selectedIndexes.length
 
   const handleBulkDelete = () => {
-    const idsToRemove = new Set(
-      selectedIndexes.map((index) => filtered[Number(index)]?.id)
-    )
-    setCustomers((prev) => prev.filter((c) => !idsToRemove.has(c.id)))
     toast.error(
-      `Deleted ${selectedCount} customer${selectedCount > 1 ? "s" : ""}`
+      "Customer accounts can't be deleted here — manage them from Supabase Auth."
     )
     setRowSelection({})
   }
@@ -189,25 +179,17 @@ export default function CustomersPage() {
               label:
                 row.original.status === "Blocked" ? "Unblock" : "Block",
               icon: <BanIcon />,
-              onClick: () =>
-                setCustomers((prev) =>
-                  prev.map((c) =>
-                    c.id === row.original.id
-                      ? {
-                          ...c,
-                          status:
-                            c.status === "Blocked" ? "Active" : "Blocked",
-                        }
-                      : c
-                  )
-                ),
-            },
-            {
-              label: "Delete",
-              icon: <Trash2Icon />,
-              destructive: true,
-              separatorBefore: true,
-              onClick: () => toast.error(`Deleted ${row.original.name}`),
+              onClick: () => {
+                void updateCustomer.mutateAsync({
+                  id: row.original.id,
+                  payload: {
+                    name: row.original.name,
+                    phone: row.original.phone,
+                    status:
+                      row.original.status === "Blocked" ? "Active" : "Blocked",
+                  },
+                })
+              },
             },
           ]
           return <DataTableRowActions actions={actions} />
@@ -215,7 +197,7 @@ export default function CustomersPage() {
         size: 40,
       },
     ],
-    [router]
+    [router, updateCustomer]
   )
 
   return (
@@ -224,9 +206,11 @@ export default function CustomersPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Customers
         </h1>
-        <Button render={<Link href="/admin/customers/add" />}>
-          <PlusIcon data-icon="inline-start" />
-          Add Customer
+        <Button asChild>
+          <Link href="/admin/customers/add">
+            <PlusIcon data-icon="inline-start" />
+            Add Customer
+          </Link>
         </Button>
       </div>
 
@@ -277,7 +261,6 @@ export default function CustomersPage() {
         }
         filters={
           <Select
-            items={STATUS_ITEMS}
             value={status}
             onValueChange={(value) => setStatus(value ?? "all")}
           >

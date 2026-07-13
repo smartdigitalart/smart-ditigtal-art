@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { OrderDetail } from "@/components/orders/order-detail"
-import { getOrderById } from "@/lib/mock-orders"
+import { getOrderByIdAction } from "@/app/admin/(protected)/orders/actions"
 
 export default async function OrderDetailPage({
   params,
@@ -9,7 +9,7 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const order = getOrderById(id)
+  const order = await getOrderByIdAction(id)
 
   if (!order) {
     notFound()

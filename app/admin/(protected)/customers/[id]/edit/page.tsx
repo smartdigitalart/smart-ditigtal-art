@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { CustomerForm } from "@/components/customers/customer-form"
-import { getCustomerById } from "@/lib/mock-customers"
+import { getCustomerByIdAction } from "@/app/admin/(protected)/customers/actions"
 
 export default async function EditCustomerPage({
   params,
@@ -9,7 +9,7 @@ export default async function EditCustomerPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const customer = getCustomerById(id)
+  const customer = await getCustomerByIdAction(id)
 
   if (!customer) {
     notFound()

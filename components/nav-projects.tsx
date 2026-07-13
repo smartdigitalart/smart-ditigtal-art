@@ -39,10 +39,12 @@ export function NavProjects({
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton
               isActive={isProjectActive(item.url)}
-              render={<Link href={item.url} onClick={closeOnMobile} />}
+              asChild
             >
-              {item.icon}
-              <span>{item.name}</span>
+              <Link href={item.url} onClick={closeOnMobile}>
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

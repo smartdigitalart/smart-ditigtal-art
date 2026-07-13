@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -35,65 +35,64 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import {
-  CATEGORIES,
-  BRANDS,
-  generateProducts,
-  type Product,
-} from "@/lib/mock-products"
-import { generateBrands } from "@/lib/mock-brands"
-import { generateCategories } from "@/lib/mock-categories"
+import { useAdminProducts, useDeleteAdminProduct } from "@/lib/api/use-admin-products"
+import { useAdminBrands } from "@/lib/api/use-admin-brands"
+import { useAdminCategories } from "@/lib/api/use-admin-categories"
+import type { Product } from "@/lib/types/product"
 
-const CATEGORY_ITEMS = [
-  { label: "All Categories", value: "all" },
-  ...CATEGORIES.map((c) => ({ label: c, value: c })),
-]
-const BRAND_ITEMS = [
-  { label: "All Brands", value: "all" },
-  ...BRANDS.map((b) => ({ label: b, value: b })),
-]
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
-  { label: "Active", value: "Active" },
-  { label: "Draft", value: "Draft" },
-  { label: "Out of stock", value: "Out of stock" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Draft", value: "DRAFT" },
+  { label: "Out of stock", value: "OUT_OF_STOCK" },
 ]
 
 const STATUS_STYLES: Record<Product["status"], string> = {
-  Active: "bg-chart-2/10 text-chart-2",
-  Draft: "bg-muted text-muted-foreground",
-  "Out of stock": "bg-destructive/10 text-destructive",
+  ACTIVE: "bg-chart-2/10 text-chart-2",
+  DRAFT: "bg-muted text-muted-foreground",
+  OUT_OF_STOCK: "bg-destructive/10 text-destructive",
 }
-
-const BRAND_ID_BY_NAME = new Map(
-  generateBrands(24).map((brand) => [brand.name, brand.id])
-)
-const CATEGORY_ID_BY_NAME = new Map(
-  generateCategories(24).map((category) => [category.name, category.id])
-)
 
 export default function ProductsPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [products, setProducts] = useState<Product[]>([])
+  const { data: productsData, isLoading: loading } = useAdminProducts()
+  const { data: categoriesData } = useAdminCategories()
+  const { data: brandsData } = useAdminBrands()
+  const deleteProduct = useDeleteAdminProduct()
+  const products = productsData?.items ?? []
+  const categories = categoriesData?.items ?? []
+  const brands = brandsData?.items ?? []
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("all")
   const [brand, setBrand] = useState("all")
   const [status, setStatus] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setProducts(generateProducts(48))
-      setLoading(false)
-    }, 900)
-    return () => clearTimeout(timer)
-  }, [])
+  const categoryById = useMemo(
+    () => new Map(categories.map((c) => [c.id, c])),
+    [categories]
+  )
+  const brandById = useMemo(() => new Map(brands.map((b) => [b.id, b])), [brands])
+
+  const CATEGORY_ITEMS = useMemo(
+    () => [
+      { label: "All Categories", value: "all" },
+      ...categories.map((c) => ({ label: c.name, value: c.id })),
+    ],
+    [categories]
+  )
+  const BRAND_ITEMS = useMemo(
+    () => [
+      { label: "All Brands", value: "all" },
+      ...brands.map((b) => ({ label: b.name, value: b.id })),
+    ],
+    [brands]
+  )
 
   const filtered = useMemo(() => {
     return products.filter((product) => {
-      if (category !== "all" && product.category !== category) return false
-      if (brand !== "all" && product.brand !== brand) return false
+      if (category !== "all" && product.categoryId !== category) return false
+      if (brand !== "all" && product.brandId !== brand) return false
       if (status !== "all" && product.status !== status) return false
       return true
     })
@@ -116,10 +115,10 @@ export default function ProductsPage() {
   const selectedCount = selectedIndexes.length
 
   const handleBulkDelete = () => {
-    const idsToRemove = new Set(
-      selectedIndexes.map((index) => filtered[Number(index)]?.id)
-    )
-    setProducts((prev) => prev.filter((product) => !idsToRemove.has(product.id)))
+    const idsToRemove = selectedIndexes
+      .map((index) => filtered[Number(index)]?.id)
+      .filter((id): id is string => !!id)
+    void Promise.all(idsToRemove.map((id) => deleteProduct.mutateAsync(id)))
     toast.error(
       `Deleted ${selectedCount} product${selectedCount > 1 ? "s" : ""}`
     )
@@ -129,9 +128,9 @@ export default function ProductsPage() {
   const stats = useMemo(
     () => ({
       total: products.length,
-      categories: new Set(products.map((p) => p.category)).size,
-      brands: new Set(products.map((p) => p.brand)).size,
-      outOfStock: products.filter((p) => p.status === "Out of stock").length,
+      categories: new Set(products.map((p) => p.categoryId)).size,
+      brands: new Set(products.map((p) => p.brandId)).size,
+      outOfStock: products.filter((p) => p.status === "OUT_OF_STOCK").length,
     }),
     [products]
   )
@@ -164,53 +163,45 @@ export default function ProductsPage() {
         ),
       },
       {
-        accessorKey: "category",
+        accessorKey: "categoryId",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Category" />
         ),
         cell: ({ row }) => {
-          const categoryId = CATEGORY_ID_BY_NAME.get(row.original.category)
+          const categoryName = categoryById.get(row.original.categoryId)?.name
 
-          if (!categoryId) {
-            return (
-              <span className="text-sm text-foreground">
-                {row.original.category}
-              </span>
-            )
+          if (!categoryName) {
+            return <span className="text-sm text-muted-foreground">—</span>
           }
 
           return (
             <Link
-              href={`/admin/categories/${categoryId}/edit`}
+              href={`/admin/categories/${row.original.categoryId}/edit`}
               className="text-sm font-medium text-foreground hover:text-secondary"
             >
-              {row.original.category}
+              {categoryName}
             </Link>
           )
         },
       },
       {
-        accessorKey: "brand",
+        accessorKey: "brandId",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Brand" />
         ),
         cell: ({ row }) => {
-          const brandId = BRAND_ID_BY_NAME.get(row.original.brand)
+          const brandName = brandById.get(row.original.brandId)?.name
 
-          if (!brandId) {
-            return (
-              <span className="text-sm text-foreground">
-                {row.original.brand}
-              </span>
-            )
+          if (!brandName) {
+            return <span className="text-sm text-muted-foreground">—</span>
           }
 
           return (
             <Link
-              href={`/admin/brands/${brandId}/edit`}
+              href={`/admin/brands/${row.original.brandId}/edit`}
               className="text-sm font-medium text-foreground hover:text-secondary"
             >
-              {row.original.brand}
+              {brandName}
             </Link>
           )
         },
@@ -259,7 +250,10 @@ export default function ProductsPage() {
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
-              onClick: () => toast.error(`Deleted ${row.original.name}`),
+              onClick: () => {
+                void deleteProduct.mutateAsync(row.original.id)
+                toast.error(`Deleted ${row.original.name}`)
+              },
             },
           ]
           return <DataTableRowActions actions={actions} />
@@ -267,7 +261,7 @@ export default function ProductsPage() {
         size: 40,
       },
     ],
-    [router]
+    [router, categoryById, brandById, deleteProduct]
   )
 
   return (
@@ -276,9 +270,11 @@ export default function ProductsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Products
         </h1>
-        <Button render={<Link href="/admin/products/add" />}>
-          <PlusIcon data-icon="inline-start" />
-          Add Product
+        <Button asChild>
+          <Link href="/admin/products/add">
+            <PlusIcon data-icon="inline-start" />
+            Add Product
+          </Link>
         </Button>
       </div>
 
@@ -330,7 +326,6 @@ export default function ProductsPage() {
         filters={
           <>
             <Select
-              items={CATEGORY_ITEMS}
               value={category}
               onValueChange={(value) => setCategory(value ?? "all")}
             >
@@ -348,7 +343,6 @@ export default function ProductsPage() {
               </SelectContent>
             </Select>
             <Select
-              items={BRAND_ITEMS}
               value={brand}
               onValueChange={(value) => setBrand(value ?? "all")}
             >
@@ -366,7 +360,6 @@ export default function ProductsPage() {
               </SelectContent>
             </Select>
             <Select
-              items={STATUS_ITEMS}
               value={status}
               onValueChange={(value) => setStatus(value ?? "all")}
             >

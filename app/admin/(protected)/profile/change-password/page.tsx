@@ -65,10 +65,12 @@ export default function AdminChangePasswordPage() {
           variant="ghost"
           size="sm"
           className="-ml-2 mb-2"
-          render={<Link href="/admin/profile" />}
+          asChild
         >
-          <ArrowLeftIcon data-icon="inline-start" />
-          Back to profile
+          <Link href="/admin/profile">
+            <ArrowLeftIcon data-icon="inline-start" />
+            Back to profile
+          </Link>
         </Button>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Change password

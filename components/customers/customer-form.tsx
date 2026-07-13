@@ -31,12 +31,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { SingleImageUpload } from "@/components/shared/single-image-upload"
-import { type Customer } from "@/lib/mock-customers"
+import { useUpdateAdminCustomer } from "@/lib/api/use-admin-customers"
+import { CUSTOMER_STATUSES, type Customer } from "@/lib/types/customer"
 
-const STATUS_ITEMS = [
-  { label: "Active", value: "Active" },
-  { label: "Blocked", value: "Blocked" },
-]
+const STATUS_ITEMS = CUSTOMER_STATUSES.map((status) => ({
+  label: status,
+  value: status,
+}))
 
 export interface CustomerFormValues {
   name: string
@@ -45,10 +46,11 @@ export interface CustomerFormValues {
   status: Customer["status"]
 }
 
-export function CustomerForm({ customer }: { customer?: Customer }) {
+export function CustomerForm({ customer }: { customer: Customer }) {
   const router = useRouter()
-  const isEdit = !!customer
-  const [saving, setSaving] = useState(false)
+  const isEdit = true
+  const updateCustomer = useUpdateAdminCustomer()
+  const saving = updateCustomer.isPending
   const [avatar, setAvatar] = useState<string | null>(customer?.avatar ?? null)
 
   const {
@@ -67,15 +69,15 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
   })
 
   const onSubmit = async (data: CustomerFormValues) => {
-    setSaving(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600))
-      toast.success(isEdit ? "Customer updated" : "Customer created", {
-        description: data.name,
+      await updateCustomer.mutateAsync({
+        id: customer.id,
+        payload: { name: data.name, phone: data.phone, status: data.status },
       })
+      toast.success("Customer updated", { description: data.name })
       router.push("/admin/customers")
-    } finally {
-      setSaving(false)
+    } catch {
+      toast.error("Failed to update customer")
     }
   }
 
@@ -178,7 +180,6 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
                   <Field>
                     <FieldLabel htmlFor="status">Status</FieldLabel>
                     <Select
-                      items={STATUS_ITEMS}
                       value={watch("status")}
                       onValueChange={(value) =>
                         value &&

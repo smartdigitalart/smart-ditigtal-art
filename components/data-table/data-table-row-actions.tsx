@@ -26,17 +26,15 @@ export function DataTableRowActions({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground"
-            aria-label="Open row menu"
-          />
-        }
-      >
-        <MoreHorizontalIcon />
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground"
+          aria-label="Open row menu"
+        >
+          <MoreHorizontalIcon />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuGroup>

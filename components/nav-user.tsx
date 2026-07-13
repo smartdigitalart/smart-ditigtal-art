@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Avatar,
   AvatarFallback,
@@ -22,6 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { ChevronsUpDownIcon, LogOutIcon, UserIcon } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
 
 export function NavUser({
   user,
@@ -32,6 +34,8 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { logout } = useAuth()
+  const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
 
   const initials = user.name.slice(0, 2).toUpperCase()
@@ -39,9 +43,10 @@ export function NavUser({
   const handleLogout = async () => {
     setLoggingOut(true)
     try {
-      await fetch("/admin-session/logout", { method: "POST" })
+      await logout()
+      router.push("/")
     } finally {
-      window.location.href = "/admin/login"
+      setLoggingOut(false)
     }
   }
 
@@ -49,19 +54,17 @@ export function NavUser({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
-            }
-          >
-            <Avatar>
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs">{user.email}</span>
-            </div>
-            <ChevronsUpDownIcon className="ml-auto size-4" />
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton size="lg" className="aria-expanded:bg-muted">
+              <Avatar>
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate text-xs">{user.email}</span>
+              </div>
+              <ChevronsUpDownIcon className="ml-auto size-4" />
+            </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-fit"
@@ -84,9 +87,11 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href="/admin/profile" />}>
-                <UserIcon />
-                Profile
+              <DropdownMenuItem asChild>
+                <Link href="/admin/profile">
+                  <UserIcon />
+                  Profile
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

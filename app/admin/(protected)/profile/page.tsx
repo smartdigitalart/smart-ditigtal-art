@@ -227,9 +227,11 @@ export default function AdminProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardFooter className="justify-end border-t pt-4">
-          <Button variant="outline" render={<Link href="/admin/profile/change-password" />}>
-            <KeyRoundIcon data-icon="inline-start" />
-            Change password
+          <Button variant="outline" asChild>
+            <Link href="/admin/profile/change-password">
+              <KeyRoundIcon data-icon="inline-start" />
+              Change password
+            </Link>
           </Button>
         </CardFooter>
       </Card>

@@ -35,7 +35,8 @@ import {
 } from "@/components/ui/select"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
-import { type Order, type OrderStatus } from "@/lib/mock-orders"
+import { useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
+import { type Order, type OrderStatus } from "@/lib/types/order"
 
 const STATUS_ITEMS: { label: string; value: OrderStatus; icon: React.ReactNode }[] = [
   { label: "Pending", value: "Pending", icon: <ClockIcon className="text-chart-3" /> },
@@ -55,18 +56,18 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
 
 export function OrderDetail({ order }: { order: Order }) {
   const router = useRouter()
+  const updateStatus = useUpdateOrderStatus()
   const [savedStatus, setSavedStatus] = useState<OrderStatus>(order.status)
   const [status, setStatus] = useState<OrderStatus>(order.status)
-  const [saving, setSaving] = useState(false)
+  const saving = updateStatus.isPending
 
   const handleSave = async () => {
-    setSaving(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await updateStatus.mutateAsync({ id: order.id, status })
       setSavedStatus(status)
       toast.success(`${order.id} updated to ${status}`)
-    } finally {
-      setSaving(false)
+    } catch {
+      toast.error("Failed to update order status")
     }
   }
 
@@ -183,7 +184,6 @@ export function OrderDetail({ order }: { order: Order }) {
                 <Field>
                   <FieldLabel htmlFor="order-status">Status</FieldLabel>
                   <Select
-                    items={STATUS_ITEMS}
                     value={status}
                     onValueChange={(value) =>
                       value && setStatus(value as OrderStatus)

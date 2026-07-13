@@ -1,6 +1,5 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { HomeIcon } from "lucide-react";
 
 import { AdminBreadcrumb } from "@/components/admin-breadcrumb";
@@ -12,25 +11,35 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const admin = await verifyAdminToken(
-    cookieStore.get(ADMIN_COOKIE_NAME)?.value,
-  );
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
 
-  if (!admin) {
-    redirect("/admin/login");
+  if (!authUser) {
+    redirect("/signin?redirect=/admin/dashboard");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name, email, role")
+    .eq("id", authUser.id)
+    .maybeSingle();
+
+  if (profile?.role !== "admin") {
+    redirect("/");
   }
 
   const user = {
-    name: admin.username ?? "Admin",
-    email: admin.email ?? "",
+    name: profile.name || authUser.email || "Admin",
+    email: profile.email || authUser.email || "",
   };
 
   return (
@@ -47,9 +56,11 @@ export default async function AdminLayout({
             <AdminBreadcrumb />
           </div>
           <div className="px-4">
-            <Button variant="outline" size="sm" render={<Link href="/" />}>
-              <HomeIcon data-icon="inline-start" />
-              Home
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/">
+                <HomeIcon data-icon="inline-start" />
+                Home
+              </Link>
             </Button>
           </div>
         </header>

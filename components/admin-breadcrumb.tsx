@@ -54,8 +54,8 @@ export function AdminBreadcrumb() {
                 {isLast ? (
                   <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink render={<Link href={crumb.href} />}>
-                    {crumb.label}
+                  <BreadcrumbLink asChild>
+                    <Link href={crumb.href}>{crumb.label}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>

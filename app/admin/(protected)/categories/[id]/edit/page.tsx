@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { CategoryForm } from "@/components/categories/category-form"
-import { getCategoryById } from "@/lib/mock-categories"
+import { getCategoryByIdAction } from "@/app/admin/(protected)/categories/actions"
 
 export default async function EditCategoryPage({
   params,
@@ -9,7 +9,7 @@ export default async function EditCategoryPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const category = getCategoryById(id)
+  const category = await getCategoryByIdAction(id)
 
   if (!category) {
     notFound()

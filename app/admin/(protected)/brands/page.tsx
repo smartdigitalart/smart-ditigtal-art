@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -34,12 +34,13 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import { generateBrands, type Brand } from "@/lib/mock-brands"
+import { useAdminBrands, useDeleteAdminBrand } from "@/lib/api/use-admin-brands"
+import type { Brand } from "@/lib/types/brand"
 
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
-  { label: "Active", value: "Active" },
-  { label: "Inactive", value: "Inactive" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Inactive", value: "INACTIVE" },
 ]
 const FEATURED_ITEMS = [
   { label: "All Brands", value: "all" },
@@ -47,26 +48,19 @@ const FEATURED_ITEMS = [
 ]
 
 const STATUS_STYLES: Record<Brand["status"], string> = {
-  Active: "bg-chart-2/10 text-chart-2",
-  Inactive: "bg-muted text-muted-foreground",
+  ACTIVE: "bg-chart-2/10 text-chart-2",
+  INACTIVE: "bg-muted text-muted-foreground",
 }
 
 export default function BrandsPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [brands, setBrands] = useState<Brand[]>([])
+  const { data, isLoading: loading } = useAdminBrands()
+  const deleteBrand = useDeleteAdminBrand()
+  const brands = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [featuredFilter, setFeaturedFilter] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setBrands(generateBrands(24))
-      setLoading(false)
-    }, 900)
-    return () => clearTimeout(timer)
-  }, [])
 
   const filtered = useMemo(() => {
     return brands.filter((brand) => {
@@ -92,10 +86,10 @@ export default function BrandsPage() {
   const selectedCount = selectedIndexes.length
 
   const handleBulkDelete = () => {
-    const idsToRemove = new Set(
-      selectedIndexes.map((index) => filtered[Number(index)]?.id)
-    )
-    setBrands((prev) => prev.filter((b) => !idsToRemove.has(b.id)))
+    const idsToRemove = selectedIndexes
+      .map((index) => filtered[Number(index)]?.id)
+      .filter((id): id is string => !!id)
+    void Promise.all(idsToRemove.map((id) => deleteBrand.mutateAsync(id)))
     toast.error(`Deleted ${selectedCount} brand${selectedCount > 1 ? "s" : ""}`)
     setRowSelection({})
   }
@@ -103,7 +97,7 @@ export default function BrandsPage() {
   const stats = useMemo(
     () => ({
       total: brands.length,
-      active: brands.filter((b) => b.status === "Active").length,
+      active: brands.filter((b) => b.status === "ACTIVE").length,
       featured: brands.filter((b) => b.featured).length,
       products: brands.reduce((sum, b) => sum + b.productCount, 0),
     }),
@@ -184,7 +178,10 @@ export default function BrandsPage() {
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
-              onClick: () => toast.error(`Deleted ${row.original.name}`),
+              onClick: () => {
+                void deleteBrand.mutateAsync(row.original.id)
+                toast.error(`Deleted ${row.original.name}`)
+              },
             },
           ]
           return <DataTableRowActions actions={actions} />
@@ -192,7 +189,7 @@ export default function BrandsPage() {
         size: 40,
       },
     ],
-    [router]
+    [router, deleteBrand]
   )
 
   return (
@@ -201,9 +198,11 @@ export default function BrandsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Brands
         </h1>
-        <Button render={<Link href="/admin/brands/add" />}>
-          <PlusIcon data-icon="inline-start" />
-          Add Brand
+        <Button asChild>
+          <Link href="/admin/brands/add">
+            <PlusIcon data-icon="inline-start" />
+            Add Brand
+          </Link>
         </Button>
       </div>
 
@@ -255,7 +254,6 @@ export default function BrandsPage() {
         filters={
           <>
             <Select
-              items={FEATURED_ITEMS}
               value={featuredFilter}
               onValueChange={(value) => setFeaturedFilter(value ?? "all")}
             >
@@ -273,7 +271,6 @@ export default function BrandsPage() {
               </SelectContent>
             </Select>
             <Select
-              items={STATUS_ITEMS}
               value={status}
               onValueChange={(value) => setStatus(value ?? "all")}
             >

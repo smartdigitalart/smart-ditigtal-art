@@ -53,9 +53,9 @@ function SignInPageContent() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace("/");
+      router.replace(searchParams.get("redirect") || "/");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, searchParams]);
 
   useEffect(() => {
     if (searchParams.get("error") === "oauth") {
@@ -108,7 +108,7 @@ function SignInPageContent() {
         });
 
         toast.success("Sign in successful.");
-        router.push("/");
+        router.push(searchParams.get("redirect") || "/");
       }
     } catch (error) {
       toast.error(getErrorMessage(error, "Authentication failed."));

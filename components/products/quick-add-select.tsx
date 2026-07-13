@@ -58,18 +58,16 @@ export function QuickAddSelect({
       <div className="flex items-center justify-between">
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={addLabel}
-                className="text-muted-foreground hover:text-primary"
-              />
-            }
-          >
-            <PlusIcon />
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={addLabel}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <PlusIcon />
+            </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64" align="end">
             <PopoverHeader>
@@ -97,7 +95,6 @@ export function QuickAddSelect({
         </Popover>
       </div>
       <Select
-        items={items}
         value={value}
         onValueChange={(next) => next && onValueChange(next)}
       >

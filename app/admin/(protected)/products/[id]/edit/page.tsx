@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { ProductForm } from "@/components/products/product-form"
-import { getProductById } from "@/lib/mock-products"
+import { getProductByIdAction } from "@/app/admin/(protected)/products/actions"
 
 export default async function EditProductPage({
   params,
@@ -9,7 +9,7 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const product = getProductById(id)
+  const product = await getProductByIdAction(id)
 
   if (!product) {
     notFound()

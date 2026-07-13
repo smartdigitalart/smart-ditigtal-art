@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { BrandForm } from "@/components/brands/brand-form"
-import { getBrandById } from "@/lib/mock-brands"
+import { getBrandByIdAction } from "@/app/admin/(protected)/brands/actions"
 
 export default async function EditBrandPage({
   params,
@@ -9,7 +9,7 @@ export default async function EditBrandPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const brand = getBrandById(id)
+  const brand = await getBrandByIdAction(id)
 
   if (!brand) {
     notFound()

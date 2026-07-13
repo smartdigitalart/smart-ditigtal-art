@@ -379,10 +379,6 @@ export function ProductForm({ product }: { product?: Product }) {
                   <Field data-invalid={!!errors.categoryId}>
                     <FieldLabel htmlFor="categoryId">Category</FieldLabel>
                     <Select
-                      items={categories.map((category) => ({
-                        label: category.name,
-                        value: category.id,
-                      }))}
                       value={watch("categoryId")}
                       onValueChange={(value) =>
                         value && setValue("categoryId", value)
@@ -413,10 +409,6 @@ export function ProductForm({ product }: { product?: Product }) {
                   <Field data-invalid={!!errors.brandId}>
                     <FieldLabel htmlFor="brandId">Brand</FieldLabel>
                     <Select
-                      items={brands.map((brand) => ({
-                        label: brand.name,
-                        value: brand.id,
-                      }))}
                       value={watch("brandId")}
                       onValueChange={(value) =>
                         value && setValue("brandId", value)
@@ -492,7 +484,6 @@ export function ProductForm({ product }: { product?: Product }) {
                   <Field>
                     <FieldLabel htmlFor="status">Status</FieldLabel>
                     <Select
-                      items={STATUS_ITEMS}
                       value={watch("status")}
                       onValueChange={(value) =>
                         value && setValue("status", value as Product["status"])

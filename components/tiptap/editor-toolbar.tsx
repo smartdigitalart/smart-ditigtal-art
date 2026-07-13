@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { forwardRef, useState } from "react"
 import type { Editor } from "@tiptap/react"
 import {
   BoldIcon,
@@ -54,21 +54,22 @@ const TEXT_COLORS = [
   "#e87ba4",
 ]
 
-function ToolbarButton({
-  onClick,
-  active,
-  disabled,
-  label,
-  children,
-}: {
-  onClick: () => void
-  active?: boolean
-  disabled?: boolean
-  label: string
-  children: React.ReactNode
-}) {
+const ToolbarButton = forwardRef<
+  HTMLButtonElement,
+  {
+    onClick: () => void
+    active?: boolean
+    disabled?: boolean
+    label: string
+    children: React.ReactNode
+  } & React.ComponentProps<"button">
+>(function ToolbarButton(
+  { onClick, active, disabled, label, children, className, ...props },
+  ref
+) {
   return (
     <Button
+      ref={ref}
       type="button"
       variant="ghost"
       size="icon-sm"
@@ -76,12 +77,13 @@ function ToolbarButton({
       aria-pressed={active}
       disabled={disabled}
       onClick={onClick}
-      className={cn(active && "bg-muted text-foreground")}
+      className={cn(active && "bg-muted text-foreground", className)}
+      {...props}
     >
       {children}
     </Button>
   )
-}
+})
 
 function LinkButton({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false)
@@ -95,17 +97,15 @@ function LinkButton({ editor }: { editor: Editor }) {
         if (next) setUrl(editor.getAttributes("link").href ?? "")
       }}
     >
-      <PopoverTrigger
-        render={
-          <ToolbarButton
-            label="Link"
-            active={editor.isActive("link")}
-            onClick={() => {}}
-          >
-            <LinkIcon />
-          </ToolbarButton>
-        }
-      />
+      <PopoverTrigger asChild>
+        <ToolbarButton
+          label="Link"
+          active={editor.isActive("link")}
+          onClick={() => {}}
+        >
+          <LinkIcon />
+        </ToolbarButton>
+      </PopoverTrigger>
       <PopoverContent className="w-64" align="start">
         <form
           className="flex items-center gap-2"
@@ -141,13 +141,11 @@ function ImageButton({ editor }: { editor: Editor }) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <ToolbarButton label="Insert image" onClick={() => {}}>
-            <ImageIcon />
-          </ToolbarButton>
-        }
-      />
+      <PopoverTrigger asChild>
+        <ToolbarButton label="Insert image" onClick={() => {}}>
+          <ImageIcon />
+        </ToolbarButton>
+      </PopoverTrigger>
       <PopoverContent className="w-64" align="start">
         <form
           className="flex items-center gap-2"
@@ -179,13 +177,11 @@ function ImageButton({ editor }: { editor: Editor }) {
 function ColorButton({ editor }: { editor: Editor }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
-          <ToolbarButton label="Text color" onClick={() => {}}>
-            <PaletteIcon />
-          </ToolbarButton>
-        }
-      />
+      <PopoverTrigger asChild>
+        <ToolbarButton label="Text color" onClick={() => {}}>
+          <PaletteIcon />
+        </ToolbarButton>
+      </PopoverTrigger>
       <PopoverContent className="w-auto p-2" align="start">
         <div className="flex items-center gap-1.5">
           {TEXT_COLORS.map((color) => (

@@ -258,7 +258,6 @@ export function BrandForm({ brand }: { brand?: Brand }) {
                   <Field>
                     <FieldLabel htmlFor="status">Status</FieldLabel>
                     <Select
-                      items={STATUS_ITEMS}
                       value={status}
                       onValueChange={(value) =>
                         value && setValue("status", value as Brand["status"])

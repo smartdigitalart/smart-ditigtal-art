@@ -8,7 +8,6 @@ import { ArrowLeftIcon, Loader2, RefreshCwIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
 import {
   Card,
   CardContent,
@@ -23,6 +22,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { RichTextEditor } from "@/components/tiptap/rich-text-editor"
 import { CoverImageUpload } from "@/components/blogs/cover-image-upload"
 import { useCreateAdminBlog, useUpdateAdminBlog } from "@/lib/api/use-admin-blogs"
@@ -30,8 +37,13 @@ import {
   uploadBlogImageAction,
   deleteBlogUploadAction,
 } from "@/app/admin/(protected)/blogs/actions"
-import { type Blog } from "@/lib/types/blog"
+import { BLOG_STATUSES, type Blog } from "@/lib/types/blog"
 import { slugify } from "@/lib/utils"
+
+const STATUS_ITEMS = BLOG_STATUSES.map((status) => ({
+  label: status,
+  value: status,
+}))
 
 export interface BlogFormValues {
   title: string
@@ -64,7 +76,7 @@ export function BlogForm({ blog }: { blog?: Blog }) {
       slug: blog?.slug ?? "",
       content: blog?.content ?? "",
       coverImage: blog?.coverImage ?? null,
-      status: blog?.status ?? "ACTIVE",
+      status: blog?.status ?? "Draft",
     },
   })
 
@@ -221,17 +233,27 @@ export function BlogForm({ blog }: { blog?: Blog }) {
               </CardHeader>
               <CardContent>
                 <FieldGroup>
-                  <Field orientation="horizontal" className="justify-between">
-                    <FieldLabel htmlFor="status" className="font-normal">
-                      Active
-                    </FieldLabel>
-                    <Switch
-                      id="status"
-                      checked={watch("status") === "ACTIVE"}
-                      onCheckedChange={(checked) =>
-                        setValue("status", checked ? "ACTIVE" : "INACTIVE")
+                  <Field>
+                    <FieldLabel htmlFor="status">Status</FieldLabel>
+                    <Select
+                      value={watch("status")}
+                      onValueChange={(value) =>
+                        value && setValue("status", value as Blog["status"])
                       }
-                    />
+                    >
+                      <SelectTrigger id="status" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {STATUS_ITEMS.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </Field>
                 </FieldGroup>
               </CardContent>
