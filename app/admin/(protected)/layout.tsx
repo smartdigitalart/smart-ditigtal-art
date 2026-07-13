@@ -19,18 +19,18 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
 
-  if (!authUser) {
+  if (claimsError || !claimsData) {
     redirect("/signin?redirect=/admin/dashboard");
   }
+
+  const { sub: userId, email: claimEmail } = claimsData.claims;
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("name, email, role")
-    .eq("id", authUser.id)
+    .eq("id", userId)
     .maybeSingle();
 
   if (profile?.role !== "admin") {
@@ -38,8 +38,8 @@ export default async function AdminLayout({
   }
 
   const user = {
-    name: profile.name || authUser.email || "Admin",
-    email: profile.email || authUser.email || "",
+    name: profile.name || claimEmail || "Admin",
+    email: profile.email || claimEmail || "",
   };
 
   return (

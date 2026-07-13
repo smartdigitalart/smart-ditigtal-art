@@ -24,8 +24,10 @@ export async function proxy(request: NextRequest) {
   );
 
   // Refresh the auth session cookie if needed. Required so server components
-  // reading the session get an up-to-date token.
-  await supabase.auth.getUser();
+  // reading the session get an up-to-date token. getClaims() verifies the
+  // JWT locally against cached signing keys instead of always calling the
+  // Auth server, which getUser() does on every request.
+  await supabase.auth.getClaims();
 
   return supabaseResponse;
 }

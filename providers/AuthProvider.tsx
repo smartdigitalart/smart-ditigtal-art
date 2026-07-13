@@ -26,8 +26,16 @@ export interface SignUpResult {
    message: string;
 }
 
+export interface Profile {
+   name: string | null;
+   email: string | null;
+   role: "customer" | "admin";
+}
+
 interface AuthContextValue {
    user: User | null;
+   profile: Profile | null;
+   isAdmin: boolean;
    isLoading: boolean;
    isAuthenticated: boolean;
    signIn: (payload: SignInPayload) => Promise<User>;
@@ -41,7 +49,20 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
    const [supabase] = useState(() => createClient());
    const [user, setUser] = useState<User | null>(null);
+   const [profile, setProfile] = useState<Profile | null>(null);
    const [isLoading, setIsLoading] = useState(true);
+
+   const loadProfile = useCallback(
+      async (userId: string) => {
+         const { data } = await supabase
+            .from("profiles")
+            .select("name, email, role")
+            .eq("id", userId)
+            .maybeSingle();
+         setProfile(data as Profile | null);
+      },
+      [supabase],
+   );
 
    const refreshUser = useCallback(async () => {
       setIsLoading(true);
@@ -49,23 +70,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
          const { data } = await supabase.auth.getUser();
          setUser(data.user);
+         if (data.user) {
+            await loadProfile(data.user.id);
+         } else {
+            setProfile(null);
+         }
       } finally {
          setIsLoading(false);
       }
-   }, [supabase]);
+   }, [supabase, loadProfile]);
 
    useEffect(() => {
       void refreshUser();
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
          setUser(session?.user ?? null);
+         if (session?.user) {
+            void loadProfile(session.user.id);
+         } else {
+            setProfile(null);
+         }
          setIsLoading(false);
       });
 
       return () => {
          listener.subscription.unsubscribe();
       };
-   }, [refreshUser, supabase]);
+   }, [refreshUser, supabase, loadProfile]);
 
    const signIn = useCallback(
       async ({ email, password }: SignInPayload) => {
@@ -101,12 +132,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          await supabase.auth.signOut();
       } finally {
          setUser(null);
+         setProfile(null);
       }
    }, [supabase]);
 
    const value = useMemo<AuthContextValue>(
       () => ({
          user,
+         profile,
+         isAdmin: profile?.role === "admin",
          isLoading,
          isAuthenticated: user !== null,
          signIn,
@@ -114,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          logout,
          refreshUser,
       }),
-      [user, isLoading, signIn, signUp, logout, refreshUser],
+      [user, profile, isLoading, signIn, signUp, logout, refreshUser],
    );
 
    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
