@@ -13,7 +13,7 @@ function mapCustomer(
     name: (row.name as string) ?? "",
     email: (row.email as string) ?? "",
     phone: (row.phone as string) ?? "",
-    avatar: null,
+    avatar: (row.avatar_url as string | null) ?? null,
     status: row.status as Customer["status"],
     role: (row.role as Customer["role"]) ?? "customer",
     ordersCount,

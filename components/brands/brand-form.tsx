@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
-import { ArrowLeftIcon, Loader2, RefreshCwIcon } from "lucide-react"
+import { ArrowLeftIcon, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,7 +39,6 @@ import {
 } from "@/app/admin/(protected)/brands/actions"
 import { useCreateAdminBrand, useUpdateAdminBrand } from "@/lib/api/use-admin-brands"
 import { type Brand } from "@/lib/types/brand"
-import { slugify } from "@/lib/utils"
 
 const STATUS_ITEMS = [
   { label: "Active", value: "ACTIVE" },
@@ -48,7 +47,6 @@ const STATUS_ITEMS = [
 
 export interface BrandFormValues {
   name: string
-  slug: string
   description: string
   status: Brand["status"]
   featured: boolean
@@ -72,23 +70,15 @@ export function BrandForm({ brand }: { brand?: Brand }) {
   } = useForm<BrandFormValues>({
     defaultValues: {
       name: brand?.name ?? "",
-      slug: brand?.slug ?? "",
       description: brand?.description ?? "",
       status: brand?.status ?? "ACTIVE",
       featured: brand?.featured ?? false,
     },
   })
 
-  const [slugTouched, setSlugTouched] = useState(isEdit)
-  const title = useWatch({ control, name: "name" })
   const description = useWatch({ control, name: "description" })
   const status = useWatch({ control, name: "status" })
   const featured = useWatch({ control, name: "featured" })
-
-  useEffect(() => {
-    if (slugTouched) return
-    setValue("slug", slugify(title))
-  }, [setValue, slugTouched, title])
 
   const handleLogoChange = (url: string | null) => {
     const previousLogo = logo
@@ -110,7 +100,6 @@ export function BrandForm({ brand }: { brand?: Brand }) {
     const payload = {
       ...(isEdit ? {} : { id: brandId }),
       name: data.name,
-      slug: data.slug,
       description: data.description,
       logo,
       status: data.status,
@@ -177,37 +166,6 @@ export function BrandForm({ brand }: { brand?: Brand }) {
                       {...register("name", { required: "Name is required" })}
                     />
                     <FieldError errors={[errors.name]} />
-                  </Field>
-
-                  <Field data-invalid={!!errors.slug}>
-                    <div className="flex items-center justify-between">
-                      <FieldLabel htmlFor="slug">Slug</FieldLabel>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Regenerate slug"
-                        className="text-muted-foreground hover:text-primary"
-                        onClick={() => {
-                          setSlugTouched(false)
-                          setValue("slug", slugify(title))
-                        }}
-                      >
-                        <RefreshCwIcon />
-                      </Button>
-                    </div>
-                    <Input
-                      id="slug"
-                      placeholder="e.g. siemens"
-                      aria-invalid={!!errors.slug}
-                      {...register("slug", {
-                        required: "Slug is required",
-                        onChange: () => {
-                          setSlugTouched(true)
-                        },
-                      })}
-                    />
-                    <FieldError errors={[errors.slug]} />
                   </Field>
 
                   <Field>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
 } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ export function NavUser({
   user: {
     name: string
     email: string
+    avatarUrl?: string | null
   }
 }) {
   const { isMobile } = useSidebar()
@@ -57,6 +59,7 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="aria-expanded:bg-muted">
               <Avatar>
+                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">

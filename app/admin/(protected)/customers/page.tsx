@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   BanIcon,
-  DollarSignIcon,
+  BanknoteIcon,
   EyeIcon,
   PencilIcon,
   PlusIcon,
@@ -20,7 +20,7 @@ import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Select,
   SelectContent,
@@ -117,6 +117,9 @@ export default function CustomersPage() {
             className="group flex items-center gap-3"
           >
             <Avatar>
+              {row.original.avatar && (
+                <AvatarImage src={row.original.avatar} alt={row.original.name} />
+              )}
               <AvatarFallback>
                 {row.original.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
@@ -150,7 +153,7 @@ export default function CustomersPage() {
         ),
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            ${row.original.totalSpent.toFixed(2)}
+            ৳{row.original.totalSpent.toFixed(2)}
           </span>
         ),
       },
@@ -291,8 +294,8 @@ export default function CustomersPage() {
         />
         <StatCard
           label="Total Revenue"
-          value={`$${stats.revenue.toFixed(2)}`}
-          icon={<DollarSignIcon />}
+          value={`৳${stats.revenue.toFixed(2)}`}
+          icon={<BanknoteIcon />}
           color="chart-5"
           loading={loading}
         />

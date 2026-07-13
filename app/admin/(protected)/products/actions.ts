@@ -9,15 +9,14 @@ function mapProduct(row: Record<string, unknown>): Product {
     id: row.id as string,
     name: row.name as string,
     slug: row.slug as string,
-    sku: (row.sku as string) ?? "",
     categoryId: (row.category_id as string) ?? "",
     brandId: (row.brand_id as string) ?? "",
     price: Number(row.price),
-    stock: Number(row.stock),
+    salePrice: row.sale_price !== null && row.sale_price !== undefined ? Number(row.sale_price) : null,
+    inStock: Boolean(row.in_stock),
     status: row.status as Product["status"],
     description: (row.description as string) ?? "",
     shortDescription: (row.short_description as string) ?? "",
-    specifications: (row.specifications as Product["specifications"]) ?? [],
     images: (row.images as Product["images"]) ?? [],
     createdAt: row.created_at as string,
   }
@@ -62,15 +61,14 @@ export async function createProductAction(
       id: payload.id,
       name: payload.name,
       slug: `${slugFromName(payload.name)}-${(payload.id ?? crypto.randomUUID()).slice(0, 8)}`,
-      sku: payload.sku,
       category_id: payload.categoryId,
       brand_id: payload.brandId,
       price: payload.price,
-      stock: payload.stock,
+      sale_price: payload.salePrice,
+      in_stock: payload.inStock,
       status: payload.status,
       description: payload.description,
       short_description: payload.shortDescription,
-      specifications: payload.specifications,
       images: payload.images,
     })
     .select()
@@ -88,15 +86,14 @@ export async function updateProductAction(
     .from("products")
     .update({
       name: payload.name,
-      sku: payload.sku,
       category_id: payload.categoryId,
       brand_id: payload.brandId,
       price: payload.price,
-      stock: payload.stock,
+      sale_price: payload.salePrice,
+      in_stock: payload.inStock,
       status: payload.status,
       description: payload.description,
       short_description: payload.shortDescription,
-      specifications: payload.specifications,
       images: payload.images,
     })
     .eq("id", id)

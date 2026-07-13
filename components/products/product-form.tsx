@@ -1,19 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useFieldArray, useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import {
-  ArrowLeftIcon,
-  Loader2,
-  PlusIcon,
-  RefreshCwIcon,
-  Trash2Icon,
-} from "lucide-react"
+import { ArrowLeftIcon, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -51,37 +46,18 @@ import {
 } from "@/lib/api/use-admin-products"
 import { useAdminBrands } from "@/lib/api/use-admin-brands"
 import { useAdminCategories } from "@/lib/api/use-admin-categories"
-import { PRODUCT_STATUSES, type Product } from "@/lib/types/product"
-
-const STATUS_LABELS: Record<Product["status"], string> = {
-  ACTIVE: "Active",
-  DRAFT: "Draft",
-  OUT_OF_STOCK: "Out of stock",
-}
-
-const STATUS_ITEMS = PRODUCT_STATUSES.map((status) => ({
-  label: STATUS_LABELS[status],
-  value: status,
-}))
-
-function generateSku(brand: string, category: string) {
-  const prefix = (value: string) =>
-    value.replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "GEN"
-  const random = Math.floor(1000 + Math.random() * 9000)
-  return `${prefix(brand)}-${prefix(category)}-${random}`
-}
+import type { Product } from "@/lib/types/product"
 
 export interface ProductFormValues {
   name: string
-  sku: string
   categoryId: string
   brandId: string
   price: number
-  stock: number
+  salePrice: number | null
+  inStock: boolean
   status: Product["status"]
   description: string
   shortDescription: string
-  specifications: { name: string; value: string }[]
 }
 
 export function ProductForm({ product }: { product?: Product }) {
@@ -102,34 +78,23 @@ export function ProductForm({ product }: { product?: Product }) {
     handleSubmit,
     watch,
     setValue,
-    control,
     formState: { errors },
   } = useForm<ProductFormValues>({
     defaultValues: {
       name: product?.name ?? "",
-      sku: product?.sku ?? "",
       categoryId: product?.categoryId ?? "",
       brandId: product?.brandId ?? "",
-      price: product?.price ?? 0,
-      stock: product?.stock ?? 0,
+      price: product ? product.price : (undefined as unknown as number),
+      salePrice: product?.salePrice ?? null,
+      inStock: product?.inStock ?? true,
       status: product?.status ?? "ACTIVE",
       description: product?.description ?? "",
       shortDescription: product?.shortDescription ?? "",
-      specifications:
-        product?.specifications.length ? product.specifications : [{ name: "", value: "" }],
     },
   })
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "specifications",
-  })
-
-  const skuTouchedRef = useRef(isEdit)
   const categoryId = watch("categoryId")
   const brandId = watch("brandId")
-  const selectedCategory = categories.find((item) => item.id === categoryId)
-  const selectedBrand = brands.find((item) => item.id === brandId)
 
   useEffect(() => {
     if (!categoryId && categories[0]) {
@@ -140,31 +105,15 @@ export function ProductForm({ product }: { product?: Product }) {
     }
   }, [brandId, brands, categoryId, categories, setValue])
 
-  useEffect(() => {
-    if (skuTouchedRef.current) return
-    setValue(
-      "sku",
-      generateSku(selectedBrand?.name ?? "GEN", selectedCategory?.name ?? "GEN")
-    )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBrand?.name, selectedCategory?.name])
-
-  const regenerateSku = () => {
-    skuTouchedRef.current = false
-    setValue(
-      "sku",
-      generateSku(selectedBrand?.name ?? "GEN", selectedCategory?.name ?? "GEN")
-    )
-  }
-
   const onSubmit = async (data: ProductFormValues) => {
     const payload = {
       ...(isEdit ? {} : { id: productId }),
       ...data,
+      salePrice:
+        data.salePrice === null || Number.isNaN(data.salePrice)
+          ? null
+          : data.salePrice,
       images,
-      specifications: data.specifications.filter(
-        (item) => item.name.trim() || item.value.trim()
-      ),
     }
 
     try {
@@ -218,46 +167,16 @@ export function ProductForm({ product }: { product?: Product }) {
               </CardHeader>
               <CardContent>
                 <FieldGroup>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field data-invalid={!!errors.name}>
-                      <FieldLabel htmlFor="name">Product name</FieldLabel>
-                      <Input
-                        id="name"
-                        placeholder="e.g. Siemens PLC Unlock Tool"
-                        aria-invalid={!!errors.name}
-                        {...register("name", { required: "Name is required" })}
-                      />
-                      <FieldError errors={[errors.name]} />
-                    </Field>
-
-                    <Field data-invalid={!!errors.sku}>
-                      <div className="flex items-center justify-between">
-                        <FieldLabel htmlFor="sku">SKU</FieldLabel>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-xs"
-                          aria-label="Auto-generate SKU"
-                          className="text-muted-foreground hover:text-primary"
-                          onClick={regenerateSku}
-                        >
-                          <RefreshCwIcon />
-                        </Button>
-                      </div>
-                      <Input
-                        id="sku"
-                        placeholder="e.g. SKU-0001"
-                        aria-invalid={!!errors.sku}
-                        {...register("sku", {
-                          required: "SKU is required",
-                          onChange: () => {
-                            skuTouchedRef.current = true
-                          },
-                        })}
-                      />
-                      <FieldError errors={[errors.sku]} />
-                    </Field>
-                  </div>
+                  <Field data-invalid={!!errors.name}>
+                    <FieldLabel htmlFor="name">Product name</FieldLabel>
+                    <Input
+                      id="name"
+                      placeholder="e.g. Siemens PLC Unlock Tool"
+                      aria-invalid={!!errors.name}
+                      {...register("name", { required: "Name is required" })}
+                    />
+                    <FieldError errors={[errors.name]} />
+                  </Field>
                 </FieldGroup>
               </CardContent>
             </Card>
@@ -315,52 +234,6 @@ export function ProductForm({ product }: { product?: Product }) {
                   minHeight="min-h-56"
                   toolbar="full"
                 />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Specifications</CardTitle>
-                <CardDescription>
-                  Add as many technical specifications as needed.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-3">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="flex items-start gap-2">
-                      <Input
-                        placeholder="Specification name (e.g. Weight)"
-                        {...register(`specifications.${index}.name` as const)}
-                      />
-                      <Input
-                        placeholder="Value (e.g. 1.2 kg)"
-                        {...register(`specifications.${index}.value` as const)}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="mt-0.5 shrink-0 text-muted-foreground hover:text-destructive"
-                        aria-label="Remove specification"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="self-start"
-                    onClick={() => append({ name: "", value: "" })}
-                  >
-                    <PlusIcon data-icon="inline-start" />
-                    Add specification
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -443,13 +316,13 @@ export function ProductForm({ product }: { product?: Product }) {
               <CardHeader>
                 <CardTitle>Pricing & inventory</CardTitle>
                 <CardDescription>
-                  Set the price, stock, and visibility.
+                  Set the price, sale price, and visibility.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <FieldGroup>
                   <Field data-invalid={!!errors.price}>
-                    <FieldLabel htmlFor="price">Price ($)</FieldLabel>
+                    <FieldLabel htmlFor="price">Price (৳)</FieldLabel>
                     <Input
                       id="price"
                       type="number"
@@ -465,43 +338,46 @@ export function ProductForm({ product }: { product?: Product }) {
                     <FieldError errors={[errors.price]} />
                   </Field>
 
-                  <Field data-invalid={!!errors.stock}>
-                    <FieldLabel htmlFor="stock">Stock quantity</FieldLabel>
+                  <Field data-invalid={!!errors.salePrice}>
+                    <FieldLabel htmlFor="salePrice">Sale price (৳)</FieldLabel>
                     <Input
-                      id="stock"
+                      id="salePrice"
                       type="number"
+                      step="0.01"
                       min="0"
-                      aria-invalid={!!errors.stock}
-                      {...register("stock", {
-                        required: "Stock is required",
-                        valueAsNumber: true,
-                        min: { value: 0, message: "Stock must be positive" },
+                      placeholder="Optional discount price"
+                      aria-invalid={!!errors.salePrice}
+                      {...register("salePrice", {
+                        setValueAs: (value) =>
+                          value === "" || value === null ? null : Number(value),
+                        min: { value: 0, message: "Sale price must be positive" },
                       })}
                     />
-                    <FieldError errors={[errors.stock]} />
+                    <FieldError errors={[errors.salePrice]} />
                   </Field>
 
-                  <Field>
-                    <FieldLabel htmlFor="status">Status</FieldLabel>
-                    <Select
-                      value={watch("status")}
-                      onValueChange={(value) =>
-                        value && setValue("status", value as Product["status"])
+                  <Field orientation="horizontal" className="justify-between">
+                    <FieldLabel htmlFor="inStock" className="font-normal">
+                      In stock
+                    </FieldLabel>
+                    <Switch
+                      id="inStock"
+                      checked={watch("inStock")}
+                      onCheckedChange={(checked) => setValue("inStock", checked)}
+                    />
+                  </Field>
+
+                  <Field orientation="horizontal" className="justify-between">
+                    <FieldLabel htmlFor="status" className="font-normal">
+                      Active
+                    </FieldLabel>
+                    <Switch
+                      id="status"
+                      checked={watch("status") === "ACTIVE"}
+                      onCheckedChange={(checked) =>
+                        setValue("status", checked ? "ACTIVE" : "INACTIVE")
                       }
-                    >
-                      <SelectTrigger id="status" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {STATUS_ITEMS.map((item) => (
-                            <SelectItem key={item.value} value={item.value}>
-                              {item.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    />
                   </Field>
                 </FieldGroup>
               </CardContent>

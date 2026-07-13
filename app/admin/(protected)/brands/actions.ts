@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
+import { slugify } from "@/lib/utils"
 import type { Brand, BrandPayload } from "@/lib/types/brand"
 
 function mapBrand(row: Record<string, unknown>, productCount: number): Brand {
@@ -55,12 +56,13 @@ export async function getBrandByIdAction(id: string): Promise<Brand | null> {
 
 export async function createBrandAction(payload: BrandPayload): Promise<Brand> {
   const supabase = await createClient()
+  const id = payload.id ?? crypto.randomUUID()
   const { data, error } = await supabase
     .from("brands")
     .insert({
-      id: payload.id,
+      id,
       name: payload.name,
-      slug: payload.slug,
+      slug: `${slugify(payload.name)}-${id.slice(0, 8)}`,
       description: payload.description,
       logo: payload.logo,
       status: payload.status,
@@ -81,7 +83,6 @@ export async function updateBrandAction(
     .from("brands")
     .update({
       name: payload.name,
-      slug: payload.slug,
       description: payload.description,
       logo: payload.logo,
       status: payload.status,

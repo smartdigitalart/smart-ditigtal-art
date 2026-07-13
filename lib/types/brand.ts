@@ -15,7 +15,6 @@ export interface Brand {
 export interface BrandPayload {
   id?: string
   name: string
-  slug: string
   description: string
   logo: string | null
   status: Brand["status"]

@@ -15,7 +15,6 @@ export interface Category {
 export interface CategoryPayload {
   id?: string
   name: string
-  slug: string
   description: string
   image: string | null
   parentId: string | null

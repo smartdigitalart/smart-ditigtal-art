@@ -29,7 +29,7 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name, email, role")
+    .select("name, email, role, avatar_url")
     .eq("id", userId)
     .maybeSingle();
 
@@ -40,6 +40,7 @@ export default async function AdminLayout({
   const user = {
     name: profile.name || claimEmail || "Admin",
     email: profile.email || claimEmail || "",
+    avatarUrl: profile.avatar_url ?? null,
   };
 
   return (

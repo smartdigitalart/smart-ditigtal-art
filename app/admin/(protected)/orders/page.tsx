@@ -7,7 +7,7 @@ import {
   CheckCircle2Icon,
   ChevronDownIcon,
   ClockIcon,
-  DollarSignIcon,
+  BanknoteIcon,
   EyeIcon,
   PackageIcon,
   RefreshCcwIcon,
@@ -193,7 +193,7 @@ export default function OrdersPage() {
         ),
         cell: ({ row }) => (
           <span className="text-sm font-medium tabular-nums text-foreground">
-            ${row.original.total.toFixed(2)}
+            ৳{row.original.total.toFixed(2)}
           </span>
         ),
       },
@@ -260,8 +260,8 @@ export default function OrdersPage() {
         />
         <StatCard
           label="Revenue"
-          value={`$${stats.revenue.toFixed(2)}`}
-          icon={<DollarSignIcon />}
+          value={`৳${stats.revenue.toFixed(2)}`}
+          icon={<BanknoteIcon />}
           color="chart-5"
           loading={loading}
         />

@@ -74,7 +74,7 @@ export function AppSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
-  user: { name: string; email: string }
+  user: { name: string; email: string; avatarUrl?: string | null }
 }) {
   return (
     <Sidebar collapsible="icon" {...props}>

@@ -211,7 +211,7 @@ export function CustomerForm({ customer }: { customer: Customer }) {
                       </div>
                       <div>
                         <p className="text-lg font-bold text-foreground">
-                          ${customer.totalSpent.toFixed(2)}
+                          ৳{customer.totalSpent.toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Total spent

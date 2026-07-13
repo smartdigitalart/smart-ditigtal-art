@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { ArrowLeftIcon, Loader2, RefreshCwIcon } from "lucide-react"
+import { ArrowLeftIcon, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,7 +42,6 @@ import {
   useUpdateAdminCategory,
 } from "@/lib/api/use-admin-categories"
 import { type Category } from "@/lib/types/category"
-import { slugify } from "@/lib/utils"
 
 const STATUS_ITEMS = [
   { label: "Active", value: "ACTIVE" },
@@ -51,7 +50,6 @@ const STATUS_ITEMS = [
 
 export interface CategoryFormValues {
   name: string
-  slug: string
   description: string
   parentId: string
   status: Category["status"]
@@ -85,7 +83,6 @@ export function CategoryForm({ category }: { category?: Category }) {
   } = useForm<CategoryFormValues>({
     defaultValues: {
       name: category?.name ?? "",
-      slug: category?.slug ?? "",
       description: category?.description ?? "",
       parentId: category?.parentId ?? "none",
       status: category?.status ?? "ACTIVE",
@@ -93,20 +90,10 @@ export function CategoryForm({ category }: { category?: Category }) {
     },
   })
 
-  const slugTouchedRef = useRef(isEdit)
-  const name = watch("name")
-
-  useEffect(() => {
-    if (slugTouchedRef.current) return
-    setValue("slug", slugify(name))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name])
-
   const onSubmit = async (data: CategoryFormValues) => {
     const payload = {
       ...(isEdit ? {} : { id: categoryId }),
       name: data.name,
-      slug: data.slug,
       description: data.description,
       parentId: data.parentId === "none" ? null : data.parentId,
       status: data.status,
@@ -173,37 +160,6 @@ export function CategoryForm({ category }: { category?: Category }) {
                       {...register("name", { required: "Name is required" })}
                     />
                     <FieldError errors={[errors.name]} />
-                  </Field>
-
-                  <Field data-invalid={!!errors.slug}>
-                    <div className="flex items-center justify-between">
-                      <FieldLabel htmlFor="slug">Slug</FieldLabel>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Regenerate slug"
-                        className="text-muted-foreground hover:text-primary"
-                        onClick={() => {
-                          slugTouchedRef.current = false
-                          setValue("slug", slugify(name))
-                        }}
-                      >
-                        <RefreshCwIcon />
-                      </Button>
-                    </div>
-                    <Input
-                      id="slug"
-                      placeholder="e.g. plc"
-                      aria-invalid={!!errors.slug}
-                      {...register("slug", {
-                        required: "Slug is required",
-                        onChange: () => {
-                          slugTouchedRef.current = true
-                        },
-                      })}
-                    />
-                    <FieldError errors={[errors.slug]} />
                   </Field>
 
                   <Field>

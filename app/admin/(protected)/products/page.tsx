@@ -43,14 +43,12 @@ import type { Product } from "@/lib/types/product"
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
   { label: "Active", value: "ACTIVE" },
-  { label: "Draft", value: "DRAFT" },
-  { label: "Out of stock", value: "OUT_OF_STOCK" },
+  { label: "Inactive", value: "INACTIVE" },
 ]
 
 const STATUS_STYLES: Record<Product["status"], string> = {
   ACTIVE: "bg-chart-2/10 text-chart-2",
-  DRAFT: "bg-muted text-muted-foreground",
-  OUT_OF_STOCK: "bg-destructive/10 text-destructive",
+  INACTIVE: "bg-muted text-muted-foreground",
 }
 
 export default function ProductsPage() {
@@ -130,7 +128,7 @@ export default function ProductsPage() {
       total: products.length,
       categories: new Set(products.map((p) => p.categoryId)).size,
       brands: new Set(products.map((p) => p.brandId)).size,
-      outOfStock: products.filter((p) => p.status === "OUT_OF_STOCK").length,
+      outOfStock: products.filter((p) => !p.inStock).length,
     }),
     [products]
   )
@@ -151,14 +149,9 @@ export default function ProductsPage() {
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
               <PackageIcon className="size-4 text-muted-foreground" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-medium text-foreground group-hover:text-secondary">
-                {row.original.name}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {row.original.sku}
-              </span>
-            </div>
+            <span className="font-medium text-foreground group-hover:text-secondary">
+              {row.original.name}
+            </span>
           </Link>
         ),
       },
@@ -211,10 +204,36 @@ export default function ProductsPage() {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Price" />
         ),
+        cell: ({ row }) =>
+          row.original.salePrice != null ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium tabular-nums text-foreground">
+                ৳{row.original.salePrice.toFixed(2)}
+              </span>
+              <span className="text-xs tabular-nums text-muted-foreground line-through">
+                ৳{row.original.price.toFixed(2)}
+              </span>
+            </div>
+          ) : (
+            <span className="text-sm font-medium tabular-nums text-foreground">
+              ৳{row.original.price.toFixed(2)}
+            </span>
+          ),
+      },
+      {
+        accessorKey: "inStock",
+        header: "Stock",
         cell: ({ row }) => (
-          <span className="text-sm font-medium tabular-nums text-foreground">
-            ${row.original.price.toFixed(2)}
-          </span>
+          <Badge
+            variant="outline"
+            className={`border-transparent ${
+              row.original.inStock
+                ? "bg-chart-2/10 text-chart-2"
+                : "bg-destructive/10 text-destructive"
+            }`}
+          >
+            {row.original.inStock ? "In Stock" : "Out of Stock"}
+          </Badge>
         ),
       },
       {
@@ -225,7 +244,7 @@ export default function ProductsPage() {
             variant="outline"
             className={`border-transparent ${STATUS_STYLES[row.original.status]}`}
           >
-            {row.original.status}
+            {row.original.status === "ACTIVE" ? "Active" : "Inactive"}
           </Badge>
         ),
       },

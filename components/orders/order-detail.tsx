@@ -126,7 +126,7 @@ export function OrderDetail({ order }: { order: Order }) {
                       </span>
                     </div>
                     <span className="text-sm font-medium tabular-nums text-foreground">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ৳{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export function OrderDetail({ order }: { order: Order }) {
                 Total
               </span>
               <span className="text-lg font-bold text-foreground">
-                ${order.total.toFixed(2)}
+                ৳{order.total.toFixed(2)}
               </span>
             </CardFooter>
           </Card>
