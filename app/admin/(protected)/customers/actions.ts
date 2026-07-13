@@ -15,6 +15,7 @@ function mapCustomer(
     phone: (row.phone as string) ?? "",
     avatar: null,
     status: row.status as Customer["status"],
+    role: (row.role as Customer["role"]) ?? "customer",
     ordersCount,
     totalSpent,
     createdAt: row.created_at as string,
@@ -80,6 +81,30 @@ export async function updateCustomerAction(
       phone: payload.phone,
       status: payload.status,
     })
+    .eq("id", id)
+    .select()
+    .single()
+  if (error) throw error
+
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("total")
+    .eq("customer_id", id)
+
+  const ordersCount = orders?.length ?? 0
+  const totalSpent = (orders ?? []).reduce((sum, o) => sum + Number(o.total), 0)
+
+  return mapCustomer(data, ordersCount, totalSpent)
+}
+
+export async function updateCustomerRoleAction(
+  id: string,
+  role: Customer["role"]
+): Promise<Customer> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ role })
     .eq("id", id)
     .select()
     .single()

@@ -9,6 +9,8 @@ import {
   EyeIcon,
   PencilIcon,
   PlusIcon,
+  ShieldIcon,
+  ShieldOffIcon,
   Trash2Icon,
   UserIcon,
   UsersIcon,
@@ -36,7 +38,11 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import { useAdminCustomers, useUpdateAdminCustomer } from "@/lib/api/use-admin-customers"
+import {
+  useAdminCustomers,
+  useUpdateAdminCustomer,
+  useUpdateCustomerRole,
+} from "@/lib/api/use-admin-customers"
 import type { Customer } from "@/lib/types/customer"
 
 const STATUS_ITEMS = [
@@ -54,6 +60,7 @@ export default function CustomersPage() {
   const router = useRouter()
   const { data, isLoading: loading } = useAdminCustomers()
   const updateCustomer = useUpdateAdminCustomer()
+  const updateCustomerRole = useUpdateCustomerRole()
   const customers = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
@@ -160,6 +167,18 @@ export default function CustomersPage() {
         ),
       },
       {
+        accessorKey: "role",
+        header: "Role",
+        cell: ({ row }) =>
+          row.original.role === "admin" ? (
+            <Badge variant="outline" className="border-transparent bg-primary/10 text-primary">
+              Admin
+            </Badge>
+          ) : (
+            <span className="text-sm text-muted-foreground">Customer</span>
+          ),
+      },
+      {
         id: "actions",
         header: "",
         cell: ({ row }) => {
@@ -191,13 +210,47 @@ export default function CustomersPage() {
                 })
               },
             },
+            row.original.role === "admin"
+              ? {
+                  label: "Remove Admin",
+                  icon: <ShieldOffIcon />,
+                  destructive: true,
+                  separatorBefore: true,
+                  confirm: {
+                    title: "Remove admin access?",
+                    description: `${row.original.name} will lose access to the admin dashboard and revert to a regular customer.`,
+                    confirmLabel: "Remove admin",
+                  },
+                  onClick: () => {
+                    void updateCustomerRole
+                      .mutateAsync({ id: row.original.id, role: "customer" })
+                      .then(() =>
+                        toast.success(`${row.original.name} is no longer an admin`)
+                      )
+                  },
+                }
+              : {
+                  label: "Make Admin",
+                  icon: <ShieldIcon />,
+                  separatorBefore: true,
+                  confirm: {
+                    title: "Grant admin access?",
+                    description: `${row.original.name} will be able to sign in to the admin dashboard and manage products, orders, and other customers.`,
+                    confirmLabel: "Make admin",
+                  },
+                  onClick: () => {
+                    void updateCustomerRole
+                      .mutateAsync({ id: row.original.id, role: "admin" })
+                      .then(() => toast.success(`${row.original.name} is now an admin`))
+                  },
+                },
           ]
           return <DataTableRowActions actions={actions} />
         },
         size: 40,
       },
     ],
-    [router, updateCustomer]
+    [router, updateCustomer, updateCustomerRole]
   )
 
   return (

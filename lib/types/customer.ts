@@ -7,6 +7,7 @@ export interface Customer {
   phone: string
   avatar: string | null
   status: (typeof CUSTOMER_STATUSES)[number]
+  role: "customer" | "admin"
   ordersCount: number
   totalSpent: number
   createdAt: string

@@ -83,17 +83,17 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/admin/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center">
+                <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-md">
                   <Image
-                    src="/logo-icon.png"
-                    alt="PLC Expert"
-                    width={24}
-                    height={24}
-                    className="size-6 object-contain"
+                    src="/logo.jpg"
+                    alt="Smart Digital Art"
+                    width={32}
+                    height={32}
+                    className="size-full object-cover"
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">PLC Expert</span>
+                  <span className="truncate font-semibold">Smart Digital Art</span>
                   <span className="truncate text-xs text-muted-foreground">
                     Admin Panel
                   </span>
