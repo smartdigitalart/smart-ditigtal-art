@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
+import { slugify } from "@/lib/utils"
 import type { Category, CategoryPayload } from "@/lib/types/category"
 
 function mapCategory(
@@ -60,12 +61,13 @@ export async function createCategoryAction(
   payload: CategoryPayload
 ): Promise<Category> {
   const supabase = await createClient()
+  const id = payload.id ?? crypto.randomUUID()
   const { data, error } = await supabase
     .from("categories")
     .insert({
-      id: payload.id,
+      id,
       name: payload.name,
-      slug: payload.slug,
+      slug: `${slugify(payload.name)}-${id.slice(0, 8)}`,
       description: payload.description,
       image: payload.image,
       parent_id: payload.parentId,
@@ -86,7 +88,6 @@ export async function updateCategoryAction(
     .from("categories")
     .update({
       name: payload.name,
-      slug: payload.slug,
       description: payload.description,
       image: payload.image,
       parent_id: payload.parentId,

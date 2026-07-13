@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import {
   CameraIcon,
-  KeyRoundIcon,
   Loader2,
   MailIcon,
   SaveIcon,
@@ -218,23 +216,6 @@ export default function AdminProfilePage() {
           </CardContent>
         </Card>
       </form>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Password</CardTitle>
-          <CardDescription>
-            Change your password to keep your account secure.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="justify-end border-t pt-4">
-          <Button variant="outline" asChild>
-            <Link href="/admin/profile/change-password">
-              <KeyRoundIcon data-icon="inline-start" />
-              Change password
-            </Link>
-          </Button>
-        </CardFooter>
-      </Card>
 
       <div className="flex justify-end">
         <Button type="submit" form="profile-form" disabled={saving}>
