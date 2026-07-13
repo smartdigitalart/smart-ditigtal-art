@@ -51,40 +51,8 @@ const socialLinks = [
 
 const Footer = () => {
    return (
-      <footer className="mt-auto bg-black text-white">
-         <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-6 px-4 py-10 sm:px-6 lg:px-8">
-            <div className="rounded-xl bg-white p-2">
-               <Image
-                  src="/SMART_DIGITAL_ART_PAD_LOGO.jpg.jpeg"
-                  alt="Smart Digital Art"
-                  width={200}
-                  height={200}
-                  className="h-14 w-auto"
-               />
-            </div>
-
-            <div className="flex items-center gap-3">
-               {socialLinks.map(({ name, href, Icon }) => (
-                  <a
-                     key={name}
-                     href={href}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     aria-label={name}
-                     className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm transition-transform hover:scale-110"
-                  >
-                     <Icon
-                        className={`h-[18px] w-[18px] ${name === "Email" ? "text-[#EA4335]" : ""}`}
-                     />
-                  </a>
-               ))}
-            </div>
-
-            <Separator className="bg-white/20" />
-            <p className="text-center text-xs leading-relaxed text-gray-400">
-               © {new Date().getFullYear()} Smart Digital Art. All rights reserved.
-            </p>
-         </div>
+      <footer className="mt-auto ">
+         <h1>footer</h1>
       </footer>
    );
 };
