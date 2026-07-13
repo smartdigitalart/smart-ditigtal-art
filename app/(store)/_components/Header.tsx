@@ -7,6 +7,7 @@ import { LogOut, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 
+
 export default function Header() {
    const { user, isAuthenticated, isLoading, logout } = useAuth();
 
