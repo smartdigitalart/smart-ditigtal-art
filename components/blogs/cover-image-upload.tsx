@@ -20,7 +20,9 @@ export function CoverImageUpload({
 }: {
   value: string | null
   onChange: (url: string | null) => void
-  uploadAction: (formData: FormData) => Promise<{ url: string }>
+  uploadAction: (
+    formData: FormData
+  ) => Promise<{ url: string } | { error: string }>
   deleteAction: (blogId: string, url: string) => Promise<void>
   blogId: string
   /**
@@ -51,6 +53,11 @@ export function CoverImageUpload({
       formData.append("blogId", blogId)
       formData.append("file", file)
       const data = await uploadAction(formData)
+      if ("error" in data) {
+        toast.error(data.error)
+        return
+      }
+
       onChange(data.url)
       if (previousUrl && previousUrl !== originalValue) {
         void deleteAction(blogId, previousUrl)

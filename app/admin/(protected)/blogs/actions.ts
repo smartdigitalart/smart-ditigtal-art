@@ -2,6 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
+import {
+  uploadImageToMediaBucket,
+  type ImageUploadResult,
+} from "@/lib/supabase/upload-image"
 import type { Blog, BlogPayload } from "@/lib/types/blog"
 
 function mapBlog(row: Record<string, unknown>): Blog {
@@ -89,21 +93,8 @@ export async function deleteBlogAction(id: string): Promise<void> {
 
 export async function uploadBlogImageAction(
   formData: FormData
-): Promise<{ url: string }> {
-  const supabase = await createClient()
-  const blogId = formData.get("blogId") as string
-  const file = formData.get("file") as File | null
-  if (!file) throw new Error("No file provided")
-
-  const ext = file.name.split(".").pop() ?? "bin"
-  const path = `blogs/${blogId}/${crypto.randomUUID()}.${ext}`
-  const { error } = await supabase.storage.from("media").upload(path, file, {
-    upsert: true,
-  })
-  if (error) throw error
-
-  const { data } = supabase.storage.from("media").getPublicUrl(path)
-  return { url: data.publicUrl }
+): Promise<ImageUploadResult> {
+  return uploadImageToMediaBucket(formData, "blogId", "blogs")
 }
 
 export async function deleteBlogUploadAction(

@@ -2,6 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
+import {
+  uploadImageToMediaBucket,
+  type ImageUploadResult,
+} from "@/lib/supabase/upload-image"
 import { slugify } from "@/lib/utils"
 import type { Brand, BrandPayload } from "@/lib/types/brand"
 
@@ -109,21 +113,8 @@ export async function deleteBrandAction(id: string): Promise<void> {
 
 export async function uploadBrandImageAction(
   formData: FormData
-): Promise<{ url: string }> {
-  const supabase = await createClient()
-  const brandId = formData.get("brandId") as string
-  const file = formData.get("file") as File | null
-  if (!file) throw new Error("No file provided")
-
-  const ext = file.name.split(".").pop() ?? "bin"
-  const path = `brands/${brandId}/${crypto.randomUUID()}.${ext}`
-  const { error } = await supabase.storage.from("media").upload(path, file, {
-    upsert: true,
-  })
-  if (error) throw error
-
-  const { data } = supabase.storage.from("media").getPublicUrl(path)
-  return { url: data.publicUrl }
+): Promise<ImageUploadResult> {
+  return uploadImageToMediaBucket(formData, "brandId", "brands")
 }
 
 export async function deleteBrandUploadAction(

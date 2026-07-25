@@ -24,7 +24,9 @@ export function ProductImageUpload({
 }: {
   images: ProductImage[]
   onChange: (images: ProductImage[]) => void
-  uploadAction: (formData: FormData) => Promise<{ url: string }>
+  uploadAction: (
+    formData: FormData
+  ) => Promise<{ url: string } | { error: string }>
   deleteAction: (productId: string, url: string) => Promise<void>
   productId: string
   originalImages?: ProductImage[]
@@ -43,6 +45,10 @@ export function ProductImageUpload({
           formData.append("productId", productId)
           formData.append("file", file)
           const data = await uploadAction(formData)
+          if ("error" in data) {
+            throw new Error(data.error)
+          }
+
           return {
             id: crypto.randomUUID(),
             url: data.url,

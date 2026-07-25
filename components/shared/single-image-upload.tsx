@@ -25,7 +25,9 @@ export function SingleImageUpload({
   shape?: "square" | "circle"
   size?: string
   label?: string
-  uploadAction?: (formData: FormData) => Promise<{ url: string }>
+  uploadAction?: (
+    formData: FormData
+  ) => Promise<{ url: string } | { error: string }>
   deleteAction?: (id: string, url: string) => Promise<void>
   uploadId?: string
   uploadIdField?: string
@@ -53,6 +55,11 @@ export function SingleImageUpload({
       formData.append("file", file)
 
       const data = await uploadAction(formData)
+      if ("error" in data) {
+        toast.error(data.error)
+        return
+      }
+
       onChange(data.url)
       if (
         deleteAction &&
