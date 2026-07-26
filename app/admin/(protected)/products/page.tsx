@@ -9,7 +9,7 @@ import {
   PackageIcon,
   PencilIcon,
   PlusIcon,
-  TagsIcon,
+  StarIcon,
   Trash2Icon,
   TriangleAlertIcon,
 } from "lucide-react"
@@ -46,6 +46,10 @@ const STATUS_ITEMS = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
 ]
+const FEATURED_ITEMS = [
+  { label: "All Products", value: "all" },
+  { label: "Featured only", value: "featured" },
+]
 
 const STATUS_STYLES: Record<Product["status"], string> = {
   ACTIVE: "bg-chart-2/10 text-chart-2",
@@ -65,6 +69,7 @@ export default function ProductsPage() {
   const [category, setCategory] = useState("all")
   const [brand, setBrand] = useState("all")
   const [status, setStatus] = useState("all")
+  const [featuredFilter, setFeaturedFilter] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
@@ -94,17 +99,23 @@ export default function ProductsPage() {
       if (category !== "all" && product.categoryId !== category) return false
       if (brand !== "all" && product.brandId !== brand) return false
       if (status !== "all" && product.status !== status) return false
+      if (featuredFilter === "featured" && !product.featured) return false
       return true
     })
-  }, [products, category, brand, status])
+  }, [products, category, brand, status, featuredFilter])
 
   const hasActiveFilters =
-    category !== "all" || brand !== "all" || status !== "all" || search !== ""
+    category !== "all" ||
+    brand !== "all" ||
+    status !== "all" ||
+    featuredFilter !== "all" ||
+    search !== ""
 
   const resetFilters = () => {
     setCategory("all")
     setBrand("all")
     setStatus("all")
+    setFeaturedFilter("all")
     setSearch("")
   }
 
@@ -128,7 +139,7 @@ export default function ProductsPage() {
   const stats = useMemo(
     () => ({
       total: products.length,
-      categories: new Set(products.map((p) => p.categoryId)).size,
+      featured: products.filter((p) => p.featured).length,
       brands: new Set(products.map((p) => p.brandId)).size,
       outOfStock: products.filter((p) => !p.inStock).length,
     }),
@@ -151,8 +162,11 @@ export default function ProductsPage() {
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
               <PackageIcon className="size-4 text-muted-foreground" />
             </div>
-            <span className="font-medium text-foreground group-hover:text-secondary">
+            <span className="flex items-center gap-1.5 font-medium text-foreground group-hover:text-secondary">
               {row.original.name}
+              {row.original.featured && (
+                <StarIcon className="size-3.5 fill-chart-3 text-chart-3" />
+              )}
             </span>
           </Link>
         ),
@@ -313,9 +327,9 @@ export default function ProductsPage() {
           loading={loading}
         />
         <StatCard
-          label="Categories"
-          value={stats.categories}
-          icon={<TagsIcon />}
+          label="Featured"
+          value={stats.featured}
+          icon={<StarIcon />}
           color="chart-3"
           loading={loading}
         />
@@ -382,6 +396,23 @@ export default function ProductsPage() {
               <SelectContent>
                 <SelectGroup>
                   {BRAND_ITEMS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Select
+              value={featuredFilter}
+              onValueChange={(value) => setFeaturedFilter(value ?? "all")}
+            >
+              <SelectTrigger size="sm" className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {FEATURED_ITEMS.map((item) => (
                     <SelectItem key={item.value} value={item.value}>
                       {item.label}
                     </SelectItem>

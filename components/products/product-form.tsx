@@ -385,6 +385,19 @@ export function ProductForm({ product }: { product?: Product }) {
                       }
                     />
                   </Field>
+
+                  <Field orientation="horizontal" className="justify-between">
+                    <FieldLabel htmlFor="featured" className="font-normal">
+                      Featured product
+                    </FieldLabel>
+                    <Switch
+                      id="featured"
+                      checked={watch("featured")}
+                      onCheckedChange={(checked) =>
+                        setValue("featured", checked)
+                      }
+                    />
+                  </Field>
                 </FieldGroup>
               </CardContent>
               <CardFooter className="justify-end gap-2 border-t pt-4">
