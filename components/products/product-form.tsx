@@ -1,22 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { ArrowLeftIcon, Loader2, PlusIcon } from "lucide-react"
+import { ArrowLeftIcon, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Card,
   CardContent,
@@ -38,6 +30,7 @@ import {
 } from "@/components/products/product-image-upload"
 import { CategoryDialogForm } from "@/components/categories/category-dialog-form"
 import { BrandDialogForm } from "@/components/brands/brand-dialog-form"
+import { EntityCombobox } from "@/components/products/entity-combobox"
 import {
   deleteProductUploadAction,
   uploadProductImageAction,
@@ -101,6 +94,19 @@ export function ProductForm({ product }: { product?: Product }) {
 
   const categoryId = watch("categoryId")
   const brandId = watch("brandId")
+
+  const categoryOptions = useMemo(
+    () => categories.map((category) => ({ value: category.id, label: category.name })),
+    [categories]
+  )
+  const brandOptions = useMemo(
+    () => brands.map((brand) => ({ value: brand.id, label: brand.name })),
+    [brands]
+  )
+  const selectedCategoryOption =
+    categoryOptions.find((option) => option.value === categoryId) ?? null
+  const selectedBrandOption =
+    brandOptions.find((option) => option.value === brandId) ?? null
 
   useEffect(() => {
     if (!categoryId && categories[0]) {
@@ -256,38 +262,17 @@ export function ProductForm({ product }: { product?: Product }) {
               <CardContent>
                 <FieldGroup>
                   <Field data-invalid={!!errors.categoryId}>
-                    <div className="flex items-center justify-between">
-                      <FieldLabel htmlFor="categoryId">Category</FieldLabel>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Add category"
-                        className="text-muted-foreground hover:text-primary"
-                        onClick={() => setCategoryDialogOpen(true)}
-                      >
-                        <PlusIcon />
-                      </Button>
-                    </div>
-                    <Select
-                      value={watch("categoryId")}
-                      onValueChange={(value) =>
-                        value && setValue("categoryId", value)
+                    <FieldLabel htmlFor="categoryId">Category</FieldLabel>
+                    <EntityCombobox
+                      items={categoryOptions}
+                      selected={selectedCategoryOption}
+                      onSelect={(option) =>
+                        setValue("categoryId", option?.value ?? "")
                       }
-                    >
-                      <SelectTrigger id="categoryId" className="w-full">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select category"
+                      addLabel="Add category"
+                      onAddNew={() => setCategoryDialogOpen(true)}
+                    />
                     <input
                       type="hidden"
                       {...register("categoryId", {
@@ -298,38 +283,17 @@ export function ProductForm({ product }: { product?: Product }) {
                   </Field>
 
                   <Field data-invalid={!!errors.brandId}>
-                    <div className="flex items-center justify-between">
-                      <FieldLabel htmlFor="brandId">Brand</FieldLabel>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Add brand"
-                        className="text-muted-foreground hover:text-primary"
-                        onClick={() => setBrandDialogOpen(true)}
-                      >
-                        <PlusIcon />
-                      </Button>
-                    </div>
-                    <Select
-                      value={watch("brandId")}
-                      onValueChange={(value) =>
-                        value && setValue("brandId", value)
+                    <FieldLabel htmlFor="brandId">Brand</FieldLabel>
+                    <EntityCombobox
+                      items={brandOptions}
+                      selected={selectedBrandOption}
+                      onSelect={(option) =>
+                        setValue("brandId", option?.value ?? "")
                       }
-                    >
-                      <SelectTrigger id="brandId" className="w-full">
-                        <SelectValue placeholder="Select brand" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {brands.map((brand) => (
-                            <SelectItem key={brand.id} value={brand.id}>
-                              {brand.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select brand"
+                      addLabel="Add brand"
+                      onAddNew={() => setBrandDialogOpen(true)}
+                    />
                     <input
                       type="hidden"
                       {...register("brandId", {
@@ -441,6 +405,17 @@ export function ProductForm({ product }: { product?: Product }) {
           </div>
         </div>
       </form>
+
+      <CategoryDialogForm
+        open={categoryDialogOpen}
+        onOpenChange={setCategoryDialogOpen}
+        onCreated={(created) => setValue("categoryId", created.id)}
+      />
+      <BrandDialogForm
+        open={brandDialogOpen}
+        onOpenChange={setBrandDialogOpen}
+        onCreated={(created) => setValue("brandId", created.id)}
+      />
     </div>
   )
 }
