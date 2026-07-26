@@ -4,11 +4,19 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { ArrowLeftIcon, Loader2 } from "lucide-react"
+import { ArrowLeftIcon, Loader2, PlusIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Card,
   CardContent,
@@ -28,7 +36,8 @@ import {
   ProductImageUpload,
   type ProductImage,
 } from "@/components/products/product-image-upload"
-import { QuickAddSelect } from "@/components/products/quick-add-select"
+import { CategoryDialogForm } from "@/components/categories/category-dialog-form"
+import { BrandDialogForm } from "@/components/brands/brand-dialog-form"
 import {
   deleteProductUploadAction,
   uploadProductImageAction,
@@ -37,11 +46,8 @@ import {
   useCreateAdminProduct,
   useUpdateAdminProduct,
 } from "@/lib/api/use-admin-products"
-import { useAdminBrands, useCreateAdminBrand } from "@/lib/api/use-admin-brands"
-import {
-  useAdminCategories,
-  useCreateAdminCategory,
-} from "@/lib/api/use-admin-categories"
+import { useAdminBrands } from "@/lib/api/use-admin-brands"
+import { useAdminCategories } from "@/lib/api/use-admin-categories"
 import type { Product } from "@/lib/types/product"
 
 export interface ProductFormValues {
@@ -65,12 +71,12 @@ export function ProductForm({ product }: { product?: Product }) {
   const saving = createProduct.isPending || updateProduct.isPending
   const { data: categoriesData } = useAdminCategories()
   const { data: brandsData } = useAdminBrands()
-  const createCategory = useCreateAdminCategory()
-  const createBrand = useCreateAdminBrand()
   const categories = categoriesData?.items ?? []
   const brands = brandsData?.items ?? []
   const [productId] = useState(() => product?.id ?? crypto.randomUUID())
   const [images, setImages] = useState<ProductImage[]>(product?.images ?? [])
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
+  const [brandDialogOpen, setBrandDialogOpen] = useState(false)
 
   const {
     register,
@@ -250,29 +256,38 @@ export function ProductForm({ product }: { product?: Product }) {
               <CardContent>
                 <FieldGroup>
                   <Field data-invalid={!!errors.categoryId}>
-                    <QuickAddSelect
-                      id="categoryId"
-                      label="Category"
-                      placeholder="Select category"
-                      options={categories.map((category) => ({
-                        id: category.id,
-                        name: category.name,
-                      }))}
+                    <div className="flex items-center justify-between">
+                      <FieldLabel htmlFor="categoryId">Category</FieldLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Add category"
+                        className="text-muted-foreground hover:text-primary"
+                        onClick={() => setCategoryDialogOpen(true)}
+                      >
+                        <PlusIcon />
+                      </Button>
+                    </div>
+                    <Select
                       value={watch("categoryId")}
-                      onValueChange={(value) => setValue("categoryId", value)}
-                      onAddOption={async (name) => {
-                        const created = await createCategory.mutateAsync({
-                          name,
-                          description: "",
-                          image: null,
-                          parentId: null,
-                          status: "ACTIVE",
-                        })
-                        toast.success("Category created", { description: name })
-                        return { id: created.id, name: created.name }
-                      }}
-                      addLabel="Add category"
-                    />
+                      onValueChange={(value) =>
+                        value && setValue("categoryId", value)
+                      }
+                    >
+                      <SelectTrigger id="categoryId" className="w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                     <input
                       type="hidden"
                       {...register("categoryId", {
@@ -283,29 +298,38 @@ export function ProductForm({ product }: { product?: Product }) {
                   </Field>
 
                   <Field data-invalid={!!errors.brandId}>
-                    <QuickAddSelect
-                      id="brandId"
-                      label="Brand"
-                      placeholder="Select brand"
-                      options={brands.map((brand) => ({
-                        id: brand.id,
-                        name: brand.name,
-                      }))}
+                    <div className="flex items-center justify-between">
+                      <FieldLabel htmlFor="brandId">Brand</FieldLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Add brand"
+                        className="text-muted-foreground hover:text-primary"
+                        onClick={() => setBrandDialogOpen(true)}
+                      >
+                        <PlusIcon />
+                      </Button>
+                    </div>
+                    <Select
                       value={watch("brandId")}
-                      onValueChange={(value) => setValue("brandId", value)}
-                      onAddOption={async (name) => {
-                        const created = await createBrand.mutateAsync({
-                          name,
-                          description: "",
-                          logo: null,
-                          status: "ACTIVE",
-                          featured: false,
-                        })
-                        toast.success("Brand created", { description: name })
-                        return { id: created.id, name: created.name }
-                      }}
-                      addLabel="Add brand"
-                    />
+                      onValueChange={(value) =>
+                        value && setValue("brandId", value)
+                      }
+                    >
+                      <SelectTrigger id="brandId" className="w-full">
+                        <SelectValue placeholder="Select brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {brands.map((brand) => (
+                            <SelectItem key={brand.id} value={brand.id}>
+                              {brand.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                     <input
                       type="hidden"
                       {...register("brandId", {
