@@ -1,6 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import type { Order, OrderStatus } from "@/lib/types/order"
 
 function mapOrder(
@@ -23,7 +24,8 @@ function mapOrder(
 }
 
 export async function listOrdersAction(): Promise<Order[]> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data: orders, error } = await supabase
     .from("orders")
     .select("*")
@@ -59,7 +61,8 @@ export async function listOrdersAction(): Promise<Order[]> {
 }
 
 export async function getOrderByIdAction(id: string): Promise<Order | null> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data: order, error } = await supabase
     .from("orders")
     .select("*")
@@ -98,7 +101,8 @@ export async function updateOrderStatusAction(
   id: string,
   status: OrderStatus
 ): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("orders").update({ status }).eq("id", id)
   if (error) throw error
 }

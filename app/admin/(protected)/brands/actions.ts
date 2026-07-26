@@ -1,6 +1,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
 import {
   uploadImageToMediaBucket,
@@ -59,7 +61,8 @@ export async function getBrandByIdAction(id: string): Promise<Brand | null> {
 }
 
 export async function createBrandAction(payload: BrandPayload): Promise<Brand> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const id = payload.id ?? crypto.randomUUID()
   const { data, error } = await supabase
     .from("brands")
@@ -82,7 +85,8 @@ export async function updateBrandAction(
   id: string,
   payload: BrandPayload
 ): Promise<Brand> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("brands")
     .update({
@@ -106,7 +110,8 @@ export async function updateBrandAction(
 }
 
 export async function deleteBrandAction(id: string): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("brands").delete().eq("id", id)
   if (error) throw error
 }
@@ -114,6 +119,7 @@ export async function deleteBrandAction(id: string): Promise<void> {
 export async function uploadBrandImageAction(
   formData: FormData
 ): Promise<ImageUploadResult> {
+  await requireAdminProfile()
   return uploadImageToMediaBucket(formData, "brandId", "brands")
 }
 
@@ -121,7 +127,8 @@ export async function deleteBrandUploadAction(
   _brandId: string,
   url: string
 ): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const path = extractStoragePath("media", url)
   if (!path) return
   await supabase.storage.from("media").remove([path])

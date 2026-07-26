@@ -1,6 +1,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
 import {
   uploadImageToMediaBucket,
@@ -58,7 +60,8 @@ function slugFromName(name: string) {
 export async function createProductAction(
   payload: ProductPayload
 ): Promise<Product> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("products")
     .insert({
@@ -85,7 +88,8 @@ export async function updateProductAction(
   id: string,
   payload: ProductPayload
 ): Promise<Product> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("products")
     .update({
@@ -108,7 +112,8 @@ export async function updateProductAction(
 }
 
 export async function deleteProductAction(id: string): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("products").delete().eq("id", id)
   if (error) throw error
 }
@@ -116,6 +121,7 @@ export async function deleteProductAction(id: string): Promise<void> {
 export async function uploadProductImageAction(
   formData: FormData
 ): Promise<ImageUploadResult> {
+  await requireAdminProfile()
   return uploadImageToMediaBucket(formData, "productId", "products")
 }
 
@@ -123,7 +129,8 @@ export async function deleteProductUploadAction(
   _productId: string,
   url: string
 ): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const path = extractStoragePath("media", url)
   if (!path) return
   await supabase.storage.from("media").remove([path])

@@ -1,6 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import type { Customer, CustomerUpdatePayload } from "@/lib/types/customer"
 
 function mapCustomer(
@@ -23,7 +24,8 @@ function mapCustomer(
 }
 
 export async function listCustomersAction(): Promise<Customer[]> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data: profiles, error } = await supabase
     .from("profiles")
     .select("*")
@@ -50,7 +52,8 @@ export async function listCustomersAction(): Promise<Customer[]> {
 }
 
 export async function getCustomerByIdAction(id: string): Promise<Customer | null> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
@@ -73,7 +76,8 @@ export async function updateCustomerAction(
   id: string,
   payload: CustomerUpdatePayload
 ): Promise<Customer> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("profiles")
     .update({
@@ -101,7 +105,8 @@ export async function updateCustomerRoleAction(
   id: string,
   role: Customer["role"]
 ): Promise<Customer> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("profiles")
     .update({ role })

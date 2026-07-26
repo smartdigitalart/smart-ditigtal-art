@@ -11,35 +11,26 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdminProfile } from "@/lib/supabase/require-admin";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-
-  if (claimsError || !claimsData) {
+  let profile;
+  try {
+    profile = await requireAdminProfile();
+  } catch (error) {
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      redirect("/");
+    }
     redirect("/signin?redirect=/admin/dashboard");
   }
 
-  const { sub: userId, email: claimEmail } = claimsData.claims;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("name, email, role, avatar_url")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (profile?.role !== "admin") {
-    redirect("/");
-  }
-
   const user = {
-    name: profile.name || claimEmail || "Admin",
-    email: profile.email || claimEmail || "",
+    name: profile.name || profile.email || "Admin",
+    email: profile.email || "",
     avatarUrl: profile.avatar_url ?? null,
   };
 

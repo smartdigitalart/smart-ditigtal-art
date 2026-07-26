@@ -1,6 +1,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
 import {
   uploadImageToMediaBucket,
@@ -64,7 +66,8 @@ export async function getCategoryByIdAction(id: string): Promise<Category | null
 export async function createCategoryAction(
   payload: CategoryPayload
 ): Promise<Category> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const id = payload.id ?? crypto.randomUUID()
   const { data, error } = await supabase
     .from("categories")
@@ -87,7 +90,8 @@ export async function updateCategoryAction(
   id: string,
   payload: CategoryPayload
 ): Promise<Category> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("categories")
     .update({
@@ -111,7 +115,8 @@ export async function updateCategoryAction(
 }
 
 export async function deleteCategoryAction(id: string): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("categories").delete().eq("id", id)
   if (error) throw error
 }
@@ -119,6 +124,7 @@ export async function deleteCategoryAction(id: string): Promise<void> {
 export async function uploadCategoryImageAction(
   formData: FormData
 ): Promise<ImageUploadResult> {
+  await requireAdminProfile()
   return uploadImageToMediaBucket(formData, "categoryId", "categories")
 }
 
@@ -126,7 +132,8 @@ export async function deleteCategoryUploadAction(
   _categoryId: string,
   url: string
 ): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const path = extractStoragePath("media", url)
   if (!path) return
   await supabase.storage.from("media").remove([path])

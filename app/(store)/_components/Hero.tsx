@@ -17,8 +17,11 @@ const banners = [
 
 export function Hero() {
   return (
-    <section className="w-full px-4 py-8 sm:px-6 lg:px-8">
-      <Carousel className="mx-auto w-full max-w-7xl" opts={{ loop: true }}>
+    <section className="w-full py-8">
+      <Carousel
+        className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+        opts={{ loop: true }}
+      >
         <CarouselContent>
           {banners.map((banner) => (
             <CarouselItem key={banner.title}>

@@ -1,6 +1,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
 import {
   uploadImageToMediaBucket,
@@ -46,7 +48,8 @@ export async function getBlogByIdAction(id: string): Promise<Blog | null> {
 }
 
 export async function createBlogAction(payload: BlogPayload): Promise<Blog> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("blog_posts")
     .insert({
@@ -68,7 +71,8 @@ export async function updateBlogAction(
   id: string,
   payload: BlogPayload
 ): Promise<Blog> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("blog_posts")
     .update({
@@ -86,7 +90,8 @@ export async function updateBlogAction(
 }
 
 export async function deleteBlogAction(id: string): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("blog_posts").delete().eq("id", id)
   if (error) throw error
 }
@@ -94,6 +99,7 @@ export async function deleteBlogAction(id: string): Promise<void> {
 export async function uploadBlogImageAction(
   formData: FormData
 ): Promise<ImageUploadResult> {
+  await requireAdminProfile()
   return uploadImageToMediaBucket(formData, "blogId", "blogs")
 }
 
@@ -101,7 +107,8 @@ export async function deleteBlogUploadAction(
   _blogId: string,
   url: string
 ): Promise<void> {
-  const supabase = await createClient()
+  await requireAdminProfile()
+  const supabase = createAdminClient()
   const path = extractStoragePath("media", url)
   if (!path) return
   await supabase.storage.from("media").remove([path])

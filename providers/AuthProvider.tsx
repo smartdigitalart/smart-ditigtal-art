@@ -11,6 +11,7 @@ import {
 import type { User } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/client";
+import { getOwnProfileAction } from "@/app/(store)/profile/actions";
 
 export interface SignInPayload {
    email: string;
@@ -52,17 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    const [profile, setProfile] = useState<Profile | null>(null);
    const [isLoading, setIsLoading] = useState(true);
 
-   const loadProfile = useCallback(
-      async (userId: string) => {
-         const { data } = await supabase
-            .from("profiles")
-            .select("name, email, role")
-            .eq("id", userId)
-            .maybeSingle();
-         setProfile(data as Profile | null);
-      },
-      [supabase],
-   );
+   const loadProfile = useCallback(async () => {
+      const data = await getOwnProfileAction();
+      setProfile(data as Profile | null);
+   }, []);
 
    const refreshUser = useCallback(async () => {
       setIsLoading(true);
@@ -71,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          const { data } = await supabase.auth.getUser();
          setUser(data.user);
          if (data.user) {
-            await loadProfile(data.user.id);
+            await loadProfile();
          } else {
             setProfile(null);
          }
@@ -86,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
          setUser(session?.user ?? null);
          if (session?.user) {
-            void loadProfile(session.user.id);
+            void loadProfile();
          } else {
             setProfile(null);
          }
