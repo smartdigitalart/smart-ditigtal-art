@@ -15,6 +15,7 @@ export interface Product {
   salePrice: number | null
   inStock: boolean
   status: (typeof PRODUCT_STATUSES)[number]
+  featured: boolean
   description: string
   shortDescription: string
   images: ProductImageRecord[]
@@ -30,6 +31,7 @@ export interface ProductPayload {
   salePrice: number | null
   inStock: boolean
   status: Product["status"]
+  featured: boolean
   description: string
   shortDescription: string
   images: ProductImageRecord[]

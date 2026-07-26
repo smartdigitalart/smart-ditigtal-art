@@ -10,14 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Card,
   CardContent,
   CardDescription,
@@ -36,6 +28,7 @@ import {
   ProductImageUpload,
   type ProductImage,
 } from "@/components/products/product-image-upload"
+import { QuickAddSelect } from "@/components/products/quick-add-select"
 import {
   deleteProductUploadAction,
   uploadProductImageAction,
@@ -44,8 +37,11 @@ import {
   useCreateAdminProduct,
   useUpdateAdminProduct,
 } from "@/lib/api/use-admin-products"
-import { useAdminBrands } from "@/lib/api/use-admin-brands"
-import { useAdminCategories } from "@/lib/api/use-admin-categories"
+import { useAdminBrands, useCreateAdminBrand } from "@/lib/api/use-admin-brands"
+import {
+  useAdminCategories,
+  useCreateAdminCategory,
+} from "@/lib/api/use-admin-categories"
 import type { Product } from "@/lib/types/product"
 
 export interface ProductFormValues {
@@ -56,6 +52,7 @@ export interface ProductFormValues {
   salePrice: number | null
   inStock: boolean
   status: Product["status"]
+  featured: boolean
   description: string
   shortDescription: string
 }
@@ -68,6 +65,8 @@ export function ProductForm({ product }: { product?: Product }) {
   const saving = createProduct.isPending || updateProduct.isPending
   const { data: categoriesData } = useAdminCategories()
   const { data: brandsData } = useAdminBrands()
+  const createCategory = useCreateAdminCategory()
+  const createBrand = useCreateAdminBrand()
   const categories = categoriesData?.items ?? []
   const brands = brandsData?.items ?? []
   const [productId] = useState(() => product?.id ?? crypto.randomUUID())
@@ -88,6 +87,7 @@ export function ProductForm({ product }: { product?: Product }) {
       salePrice: product?.salePrice ?? null,
       inStock: product?.inStock ?? true,
       status: product?.status ?? "ACTIVE",
+      featured: product?.featured ?? false,
       description: product?.description ?? "",
       shortDescription: product?.shortDescription ?? "",
     },
@@ -250,26 +250,29 @@ export function ProductForm({ product }: { product?: Product }) {
               <CardContent>
                 <FieldGroup>
                   <Field data-invalid={!!errors.categoryId}>
-                    <FieldLabel htmlFor="categoryId">Category</FieldLabel>
-                    <Select
+                    <QuickAddSelect
+                      id="categoryId"
+                      label="Category"
+                      placeholder="Select category"
+                      options={categories.map((category) => ({
+                        id: category.id,
+                        name: category.name,
+                      }))}
                       value={watch("categoryId")}
-                      onValueChange={(value) =>
-                        value && setValue("categoryId", value)
-                      }
-                    >
-                      <SelectTrigger id="categoryId" className="w-full">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                      onValueChange={(value) => setValue("categoryId", value)}
+                      onAddOption={async (name) => {
+                        const created = await createCategory.mutateAsync({
+                          name,
+                          description: "",
+                          image: null,
+                          parentId: null,
+                          status: "ACTIVE",
+                        })
+                        toast.success("Category created", { description: name })
+                        return { id: created.id, name: created.name }
+                      }}
+                      addLabel="Add category"
+                    />
                     <input
                       type="hidden"
                       {...register("categoryId", {
@@ -280,26 +283,29 @@ export function ProductForm({ product }: { product?: Product }) {
                   </Field>
 
                   <Field data-invalid={!!errors.brandId}>
-                    <FieldLabel htmlFor="brandId">Brand</FieldLabel>
-                    <Select
+                    <QuickAddSelect
+                      id="brandId"
+                      label="Brand"
+                      placeholder="Select brand"
+                      options={brands.map((brand) => ({
+                        id: brand.id,
+                        name: brand.name,
+                      }))}
                       value={watch("brandId")}
-                      onValueChange={(value) =>
-                        value && setValue("brandId", value)
-                      }
-                    >
-                      <SelectTrigger id="brandId" className="w-full">
-                        <SelectValue placeholder="Select brand" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {brands.map((brand) => (
-                            <SelectItem key={brand.id} value={brand.id}>
-                              {brand.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                      onValueChange={(value) => setValue("brandId", value)}
+                      onAddOption={async (name) => {
+                        const created = await createBrand.mutateAsync({
+                          name,
+                          description: "",
+                          logo: null,
+                          status: "ACTIVE",
+                          featured: false,
+                        })
+                        toast.success("Brand created", { description: name })
+                        return { id: created.id, name: created.name }
+                      }}
+                      addLabel="Add brand"
+                    />
                     <input
                       type="hidden"
                       {...register("brandId", {

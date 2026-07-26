@@ -34,6 +34,7 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
+import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
 import {
   useAdminCategories,
   useDeleteAdminCategory,
@@ -65,6 +66,7 @@ export default function CategoriesPage() {
   const [status, setStatus] = useState("all")
   const [parentFilter, setParentFilter] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c])),
@@ -205,6 +207,11 @@ export default function CategoriesPage() {
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
+              confirm: {
+                title: "Delete category?",
+                description: `This will permanently delete "${row.original.name}". This can't be undone.`,
+                confirmLabel: "Delete",
+              },
               onClick: () => {
                 void deleteCategory.mutateAsync(row.original.id)
                 toast.error(`Deleted ${row.original.name}`)
@@ -272,7 +279,11 @@ export default function CategoriesPage() {
         onReset={resetFilters}
         bulkActions={
           selectedCount > 0 && (
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
               <Trash2Icon data-icon="inline-start" />
               Delete ({selectedCount})
             </Button>
@@ -325,6 +336,14 @@ export default function CategoriesPage() {
         globalFilter={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedCount} categor${selectedCount > 1 ? "ies" : "y"}?`}
+        description="This will permanently delete the selected categories. This can't be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

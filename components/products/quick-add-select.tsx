@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { PlusIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +23,11 @@ import {
 } from "@/components/ui/popover"
 import { FieldLabel } from "@/components/ui/field"
 
+export interface QuickAddOption {
+  id: string
+  name: string
+}
+
 export function QuickAddSelect({
   id,
   label,
@@ -30,27 +36,38 @@ export function QuickAddSelect({
   onValueChange,
   onAddOption,
   addLabel,
+  placeholder,
 }: {
   id: string
   label: string
-  options: string[]
+  options: QuickAddOption[]
   value: string
   onValueChange: (value: string) => void
-  onAddOption: (value: string) => void
+  onAddOption: (name: string) => Promise<QuickAddOption>
   addLabel: string
+  placeholder?: string
 }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
-  const items = options.map((option) => ({ label: option, value: option }))
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmed = draft.trim()
-    if (!trimmed) return
-    onAddOption(trimmed)
-    onValueChange(trimmed)
-    setDraft("")
-    setOpen(false)
+    if (!trimmed || submitting) return
+
+    setSubmitting(true)
+    try {
+      const created = await onAddOption(trimmed)
+      onValueChange(created.id)
+      setDraft("")
+      setOpen(false)
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : `Failed to create ${label.toLowerCase()}`
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -77,7 +94,7 @@ export function QuickAddSelect({
               className="mt-2 flex items-center gap-2"
               onSubmit={(event) => {
                 event.preventDefault()
-                handleAdd()
+                void handleAdd()
               }}
             >
               <Input
@@ -85,9 +102,10 @@ export function QuickAddSelect({
                 placeholder="Name"
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
+                disabled={submitting}
                 className="h-8"
               />
-              <Button type="submit" size="sm">
+              <Button type="submit" size="sm" disabled={submitting}>
                 Add
               </Button>
             </form>
@@ -99,13 +117,13 @@ export function QuickAddSelect({
         onValueChange={(next) => next && onValueChange(next)}
       >
         <SelectTrigger id={id} className="w-full">
-          <SelectValue />
+          <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {items.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
+            {options.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.name}
               </SelectItem>
             ))}
           </SelectGroup>

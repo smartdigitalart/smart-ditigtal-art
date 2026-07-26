@@ -35,6 +35,7 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
+import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
 import { useAdminProducts, useDeleteAdminProduct } from "@/lib/api/use-admin-products"
 import { useAdminBrands } from "@/lib/api/use-admin-brands"
 import { useAdminCategories } from "@/lib/api/use-admin-categories"
@@ -65,6 +66,7 @@ export default function ProductsPage() {
   const [brand, setBrand] = useState("all")
   const [status, setStatus] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c])),
@@ -269,6 +271,11 @@ export default function ProductsPage() {
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
+              confirm: {
+                title: "Delete product?",
+                description: `This will permanently delete "${row.original.name}". This can't be undone.`,
+                confirmLabel: "Delete",
+              },
               onClick: () => {
                 void deleteProduct.mutateAsync(row.original.id)
                 toast.error(`Deleted ${row.original.name}`)
@@ -336,7 +343,11 @@ export default function ProductsPage() {
         onReset={resetFilters}
         bulkActions={
           selectedCount > 0 && (
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
               <Trash2Icon data-icon="inline-start" />
               Delete ({selectedCount})
             </Button>
@@ -406,6 +417,14 @@ export default function ProductsPage() {
         globalFilter={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedCount} product${selectedCount > 1 ? "s" : ""}?`}
+        description="This will permanently delete the selected products. This can't be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

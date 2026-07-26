@@ -34,6 +34,7 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
+import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
 import { useAdminBrands, useDeleteAdminBrand } from "@/lib/api/use-admin-brands"
 import type { Brand } from "@/lib/types/brand"
 
@@ -61,6 +62,7 @@ export default function BrandsPage() {
   const [status, setStatus] = useState("all")
   const [featuredFilter, setFeaturedFilter] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   const filtered = useMemo(() => {
     return brands.filter((brand) => {
@@ -178,6 +180,11 @@ export default function BrandsPage() {
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
+              confirm: {
+                title: "Delete brand?",
+                description: `This will permanently delete "${row.original.name}". This can't be undone.`,
+                confirmLabel: "Delete",
+              },
               onClick: () => {
                 void deleteBrand.mutateAsync(row.original.id)
                 toast.error(`Deleted ${row.original.name}`)
@@ -245,7 +252,11 @@ export default function BrandsPage() {
         onReset={resetFilters}
         bulkActions={
           selectedCount > 0 && (
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
               <Trash2Icon data-icon="inline-start" />
               Delete ({selectedCount})
             </Button>
@@ -298,6 +309,14 @@ export default function BrandsPage() {
         globalFilter={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedCount} brand${selectedCount > 1 ? "s" : ""}?`}
+        description="This will permanently delete the selected brands. This can't be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

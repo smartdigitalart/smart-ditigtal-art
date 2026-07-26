@@ -34,6 +34,7 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
+import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
 import { useAdminBlogs, useDeleteAdminBlog } from "@/lib/api/use-admin-blogs"
 import { BLOG_STATUSES, type Blog } from "@/lib/types/blog"
 
@@ -56,6 +57,7 @@ export default function BlogsPage() {
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   const filtered = useMemo(() => {
     return posts.filter((post) => {
@@ -179,6 +181,11 @@ export default function BlogsPage() {
               icon: <Trash2Icon />,
               destructive: true,
               separatorBefore: true,
+              confirm: {
+                title: "Delete post?",
+                description: `This will permanently delete "${row.original.title}". This can't be undone.`,
+                confirmLabel: "Delete",
+              },
               onClick: () => {
                 void deleteBlog.mutateAsync(row.original.id)
                 toast.error(`Deleted ${row.original.title}`)
@@ -246,7 +253,11 @@ export default function BlogsPage() {
         onReset={resetFilters}
         bulkActions={
           selectedCount > 0 && (
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
               <Trash2Icon data-icon="inline-start" />
               Delete ({selectedCount})
             </Button>
@@ -280,6 +291,14 @@ export default function BlogsPage() {
         globalFilter={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedCount} post${selectedCount > 1 ? "s" : ""}?`}
+        description="This will permanently delete the selected posts. This can't be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )
