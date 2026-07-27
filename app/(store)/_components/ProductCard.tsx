@@ -29,22 +29,22 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
           </div>
         )}
       </div>
-      <div className="flex flex-col gap-1">
-        <h3 className="truncate text-sm font-medium text-foreground">
+      <div className="flex flex-col gap-1.5">
+        <h3 className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
           {product.name}
         </h3>
         <div className="flex items-center gap-2">
           {hasSale ? (
             <>
-              <span className="text-sm font-semibold text-foreground">
-                ৳{product.salePrice!.toFixed(2)}
-              </span>
-              <span className="text-xs text-muted-foreground line-through">
+              <span className="text-sm text-muted-foreground line-through">
                 ৳{product.price.toFixed(2)}
+              </span>
+              <span className="text-lg font-bold text-foreground">
+                ৳{product.salePrice!.toFixed(2)}
               </span>
             </>
           ) : (
-            <span className="text-sm font-semibold text-foreground">
+            <span className="text-lg font-bold text-foreground">
               ৳{product.price.toFixed(2)}
             </span>
           )}
