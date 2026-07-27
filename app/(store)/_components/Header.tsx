@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import SearchBar from "@/app/(store)/_components/SearchBar";
 
 export default function Header() {
    const { user, profile, isAdmin, isAuthenticated, isLoading, logout } = useAuth();
@@ -46,6 +47,10 @@ export default function Header() {
                   priority
                />
             </Link>
+
+            <div className="hidden flex-1 justify-center sm:flex">
+               <SearchBar />
+            </div>
 
             {isLoading ? (
                <Skeleton className="size-8 rounded-full" />
@@ -101,6 +106,9 @@ export default function Header() {
                   <span>Sign in</span>
                </Link>
             )}
+         </div>
+         <div className="mx-auto w-full max-w-7xl px-4 pb-3 sm:hidden">
+            <SearchBar />
          </div>
       </header>
    );
