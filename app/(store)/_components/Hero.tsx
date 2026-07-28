@@ -32,7 +32,7 @@ export function Hero() {
           <CarouselContent>
             {banners.map((banner, index) => (
               <CarouselItem key={banner.id}>
-                <div className="relative h-64 w-full overflow-hidden rounded-lg bg-muted sm:h-80 md:h-96">
+                <div className="relative aspect-[1376/768] w-full overflow-hidden rounded-lg bg-muted">
                   <Image
                     src={banner.src}
                     alt={banner.alt}
