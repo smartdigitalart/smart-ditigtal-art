@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 import { LayoutDashboardIcon, LogOutIcon, User, UserIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,7 +50,9 @@ export default function Header() {
             </Link>
 
             <div className="hidden flex-1 justify-center sm:flex">
-               <SearchBar />
+               <Suspense fallback={<div className="h-9 w-full max-w-md" />}>
+                  <SearchBar />
+               </Suspense>
             </div>
 
             {isLoading ? (
@@ -108,7 +111,9 @@ export default function Header() {
             )}
          </div>
          <div className="mx-auto w-full max-w-7xl px-4 pb-3 sm:hidden">
-            <SearchBar />
+            <Suspense fallback={<div className="h-9 w-full" />}>
+               <SearchBar />
+            </Suspense>
          </div>
       </header>
    );

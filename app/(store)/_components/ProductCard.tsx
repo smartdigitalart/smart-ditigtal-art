@@ -1,5 +1,7 @@
 import Image from "next/image"
+import Link from "next/link"
 import { PackageIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export interface FeaturedProduct {
   id: string
@@ -7,22 +9,37 @@ export interface FeaturedProduct {
   price: number
   salePrice: number | null
   image: string | null
+  hoverImage: string | null
 }
 
 export function ProductCard({ product }: { product: FeaturedProduct }) {
   const hasSale = product.salePrice != null && product.salePrice < product.price
 
   return (
-    <div className="group flex flex-col gap-3">
+    <Link href={`/products/${product.id}`} className="group flex flex-col gap-3">
       <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
         {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            sizes="(min-width: 1024px) 25vw, 50vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          <>
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              sizes="(min-width: 1024px) 25vw, 50vw"
+              className={cn(
+                "object-cover transition-all duration-500 ease-out group-hover:scale-105",
+                product.hoverImage && "group-hover:opacity-0"
+              )}
+            />
+            {product.hoverImage && (
+              <Image
+                src={product.hoverImage}
+                alt={product.name}
+                fill
+                sizes="(min-width: 1024px) 25vw, 50vw"
+                className="object-cover opacity-0 transition-all duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
+              />
+            )}
+          </>
         ) : (
           <div className="flex size-full items-center justify-center text-muted-foreground">
             <PackageIcon className="size-8" />
@@ -36,11 +53,11 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
         <div className="flex items-center gap-2">
           {hasSale ? (
             <>
-              <span className="text-sm text-muted-foreground line-through">
-                ৳{product.price.toFixed(2)}
-              </span>
               <span className="text-lg font-bold text-foreground">
                 ৳{product.salePrice!.toFixed(2)}
+              </span>
+              <span className="text-sm text-muted-foreground line-through">
+                ৳{product.price.toFixed(2)}
               </span>
             </>
           ) : (
@@ -50,6 +67,6 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
