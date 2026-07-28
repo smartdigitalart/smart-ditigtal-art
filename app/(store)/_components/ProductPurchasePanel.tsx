@@ -82,13 +82,17 @@ export function ProductPurchasePanel({
         <Button
           size="lg"
           variant="outline"
-          className="flex-1"
+          className="w-full sm:w-auto sm:flex-1"
           onClick={handleAddToCart}
         >
           <ShoppingCartIcon data-icon="inline-start" />
           Add to Cart
         </Button>
-        <Button size="lg" className="flex-1" onClick={handleBuyNow}>
+        <Button
+          size="lg"
+          className="w-full sm:w-auto sm:flex-1"
+          onClick={handleBuyNow}
+        >
           <ShoppingBagIcon data-icon="inline-start" />
           Order Now
         </Button>
