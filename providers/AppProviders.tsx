@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { CartHydration } from "@/providers/CartHydration";
 
 export default function AppProviders({
   children,
@@ -27,6 +28,7 @@ export default function AppProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <CartHydration />
         {children}
         <Toaster richColors position="top-right" />
       </AuthProvider>

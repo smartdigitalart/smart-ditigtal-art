@@ -1,13 +1,13 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { PackageCheckIcon, PackageXIcon, ShoppingBagIcon } from "lucide-react"
+import { PackageCheckIcon, PackageXIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { getProductByIdAction } from "@/app/admin/(protected)/products/actions"
 import { getCategoryByIdAction } from "@/app/admin/(protected)/categories/actions"
 import { getBrandByIdAction } from "@/app/admin/(protected)/brands/actions"
 import { ProductGallery } from "@/app/(store)/_components/ProductGallery"
+import { ProductPurchasePanel } from "@/app/(store)/_components/ProductPurchasePanel"
 import { RelatedProducts } from "@/app/(store)/_components/RelatedProducts"
 
 export default async function ProductDetailPage({
@@ -40,7 +40,7 @@ export default async function ProductDetailPage({
             <>
               <span>/</span>
               <Link
-                href={`/search?category=${encodeURIComponent(category.name)}`}
+                href={`/shop?category=${encodeURIComponent(category.slug)}`}
                 className="hover:text-foreground"
               >
                 {category.name}
@@ -110,38 +110,28 @@ export default async function ProductDetailPage({
               />
             )}
 
-            <Button
-              size="lg"
-              className="w-full sm:w-auto"
-              disabled={!product.inStock}
-              asChild={product.inStock}
-            >
-              {product.inStock ? (
-                <Link href={`/checkout?productId=${product.id}`}>
-                  <ShoppingBagIcon data-icon="inline-start" />
-                  Order Now
-                </Link>
-              ) : (
-                <>
-                  <PackageXIcon data-icon="inline-start" />
-                  Out of Stock
-                </>
-              )}
-            </Button>
-
-            {product.description && (
-              <div className="border-t border-border pt-5">
-                <h2 className="mb-2 text-sm font-semibold text-foreground">
-                  Description
-                </h2>
-                <div
-                  className="prose prose-sm max-w-none text-foreground"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
-              </div>
-            )}
+            <ProductPurchasePanel
+              productId={product.id}
+              name={product.name}
+              price={product.price}
+              salePrice={product.salePrice}
+              image={product.images[0]?.url ?? null}
+              inStock={product.inStock}
+            />
           </div>
         </div>
+
+        {product.description && (
+          <div className="mt-10 border-t border-border pt-8">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">
+              Description
+            </h2>
+            <div
+              className="prose prose-sm max-w-none text-foreground"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+          </div>
+        )}
       </div>
 
       <RelatedProducts categoryId={product.categoryId} excludeProductId={product.id} />

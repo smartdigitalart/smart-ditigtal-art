@@ -15,7 +15,7 @@ export default function SearchBar() {
       event.preventDefault();
       const trimmed = query.trim();
       if (!trimmed) return;
-      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+      router.push(`/shop?q=${encodeURIComponent(trimmed)}`);
    };
 
    return (

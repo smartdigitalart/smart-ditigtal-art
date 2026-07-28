@@ -47,13 +47,13 @@ const socialLinks = [
    { name: "Facebook", href: "https://facebook.com/", Icon: FacebookIcon },
    { name: "Instagram", href: "https://instagram.com/", Icon: InstagramIcon },
    { name: "Messenger", href: "https://m.me/", Icon: MessengerIcon },
-   { name: "Email", href: "mailto:hello@smartdigitalart.com", Icon: Mail },
+   { name: "Email", href: "mailto:info@smartdigitalartbd.com", Icon: Mail },
 ];
 
 const shopLinks = [
-   { label: "Art", href: "/search?category=painting" },
-   { label: "Perfume", href: "/search?category=perfume" },
-   { label: "Search products", href: "/search" },
+   { label: "Art", href: "/shop?category=painting" },
+   { label: "Perfume", href: "/shop?category=perfume" },
+   { label: "All products", href: "/shop" },
 ];
 
 const Footer = () => {
@@ -66,7 +66,7 @@ const Footer = () => {
                   alt="Smart Digital Art"
                   width={180}
                   height={180}
-                  className="h-10 w-auto"
+                  className="h-10 w-auto self-start"
                />
                <p className="text-sm text-muted-foreground">
                   Handmade & digital art, and signature perfumes — crafted with
@@ -129,11 +129,11 @@ const Footer = () => {
             <div className="flex flex-col gap-3">
                <h3 className="text-sm font-semibold text-foreground">Contact</h3>
                <a
-                  href="mailto:hello@smartdigitalart.com"
+                  href="mailto:info@smartdigitalartbd.com"
                   className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                >
                   <Mail className="size-4" />
-                  hello@smartdigitalart.com
+                  info@smartdigitalartbd.com
                </a>
             </div>
          </div>

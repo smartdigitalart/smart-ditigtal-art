@@ -2,6 +2,7 @@ import Link from "next/link"
 import { CheckCircle2Icon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { CopyOrderId } from "@/app/(store)/checkout/success/CopyOrderId"
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -20,12 +21,7 @@ export default async function CheckoutSuccessPage({
         Thank you for your order. We&apos;ll contact you shortly to confirm
         delivery details.
       </p>
-      {orderId && (
-        <p className="text-sm text-muted-foreground">
-          Order reference:{" "}
-          <span className="font-mono text-foreground">{orderId.slice(0, 8)}</span>
-        </p>
-      )}
+      {orderId && <CopyOrderId orderId={orderId} />}
       <Button asChild className="mt-2">
         <Link href="/">Continue shopping</Link>
       </Button>

@@ -115,7 +115,7 @@ export default function BlogsPage() {
               <FileTextIcon className="size-4 text-muted-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="font-medium text-foreground group-hover:text-secondary">
+              <span className="font-medium text-foreground group-hover:text-primary">
                 {row.original.title}
               </span>
               <span className="text-xs text-muted-foreground">

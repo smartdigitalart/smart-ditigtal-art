@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Loader2, MinusIcon, PackageIcon, PlusIcon } from "lucide-react"
+import { Loader2, MinusIcon, PackageIcon, PlusIcon, Trash2Icon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,36 +12,50 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
-import {
-  createOrderAction,
-  DELIVERY_CHARGES,
-  type DeliveryZone,
-} from "@/app/(store)/checkout/actions"
-import type { Product } from "@/lib/types/product"
+import { createOrderAction } from "@/app/(store)/checkout/actions"
+import { DELIVERY_CHARGES, type DeliveryZone } from "@/lib/checkout/delivery"
+
+export interface CheckoutLineItem {
+  productId: string
+  name: string
+  price: number
+  salePrice: number | null
+  image: string | null
+  quantity: number
+}
 
 export function CheckoutForm({
-  product,
-  initialQuantity,
+  items,
+  onQuantityChange,
+  onRemove,
+  onOrderPlaced,
 }: {
-  product: Product
-  initialQuantity: number
+  items: CheckoutLineItem[]
+  onQuantityChange: (productId: string, quantity: number) => void
+  onRemove?: (productId: string) => void
+  onOrderPlaced?: () => void
 }) {
   const router = useRouter()
-  const [quantity, setQuantity] = useState(initialQuantity)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [deliveryZone, setDeliveryZone] = useState<DeliveryZone>("inside_dhaka")
   const [submitting, setSubmitting] = useState(false)
 
-  const unitPrice = product.salePrice ?? product.price
-  const subtotal = unitPrice * quantity
+  const subtotal = items.reduce(
+    (sum, item) => sum + (item.salePrice ?? item.price) * item.quantity,
+    0
+  )
   const deliveryCharge = DELIVERY_CHARGES[deliveryZone]
   const total = subtotal + deliveryCharge
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
+    if (items.length === 0) {
+      toast.error("Your cart is empty")
+      return
+    }
     if (!name.trim() || !phone.trim() || !address.trim()) {
       toast.error("Please fill in your name, phone, and address")
       return
@@ -50,13 +64,16 @@ export function CheckoutForm({
     setSubmitting(true)
     try {
       const { orderId } = await createOrderAction({
-        productId: product.id,
-        quantity,
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
         name,
         phone,
         address,
         deliveryZone,
       })
+      onOrderPlaced?.()
       router.push(`/checkout/success?orderId=${orderId}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to place order")
@@ -132,7 +149,12 @@ export function CheckoutForm({
             </RadioGroup>
           </Field>
 
-          <Button type="submit" size="lg" disabled={submitting} className="mt-2">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={submitting || items.length === 0}
+            className="mt-2"
+          >
             {submitting && <Loader2 className="animate-spin" />}
             Place Order
           </Button>
@@ -146,51 +168,74 @@ export function CheckoutForm({
             Order Summary
           </h2>
 
-          <div className="flex items-center gap-3">
-            <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
-              {product.images[0] ? (
-                <Image
-                  src={product.images[0].url}
-                  alt={product.name}
-                  fill
-                  sizes="64px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-muted-foreground">
-                  <PackageIcon className="size-6" />
+          <div className="flex flex-col divide-y divide-border">
+            {items.map((item) => {
+              const unitPrice = item.salePrice ?? item.price
+              return (
+                <div key={item.productId} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-full items-center justify-center text-muted-foreground">
+                        <PackageIcon className="size-6" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="line-clamp-2 text-sm font-medium text-foreground">
+                      {item.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      ৳{unitPrice.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={() =>
+                        onQuantityChange(item.productId, item.quantity - 1)
+                      }
+                      aria-label="Decrease quantity"
+                    >
+                      <MinusIcon />
+                    </Button>
+                    <span className="w-6 text-center text-sm tabular-nums">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={() =>
+                        onQuantityChange(item.productId, item.quantity + 1)
+                      }
+                      aria-label="Increase quantity"
+                    >
+                      <PlusIcon />
+                    </Button>
+                  </div>
+                  {onRemove && (
+                    <button
+                      type="button"
+                      onClick={() => onRemove(item.productId)}
+                      aria-label={`Remove ${item.name}`}
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2Icon className="size-4" />
+                    </button>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">{product.name}</p>
-              <p className="text-sm text-muted-foreground">
-                ৳{unitPrice.toFixed(2)}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                aria-label="Decrease quantity"
-              >
-                <MinusIcon />
-              </Button>
-              <span className="w-6 text-center text-sm tabular-nums">
-                {quantity}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                onClick={() => setQuantity((q) => q + 1)}
-                aria-label="Increase quantity"
-              >
-                <PlusIcon />
-              </Button>
-            </div>
+              )
+            })}
           </div>
 
           <Separator className="my-4" />

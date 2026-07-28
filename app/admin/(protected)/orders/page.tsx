@@ -148,7 +148,7 @@ export default function OrdersPage() {
               <PackageIcon className="size-4 text-muted-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="font-medium text-foreground group-hover:text-secondary">
+              <span className="font-medium text-foreground group-hover:text-primary">
                 {row.original.id}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -168,7 +168,7 @@ export default function OrdersPage() {
             href={`/admin/customers/${row.original.customerId}/edit`}
             className="group flex flex-col"
           >
-            <span className="text-sm text-foreground group-hover:text-secondary">
+            <span className="text-sm text-foreground group-hover:text-primary">
               {row.original.customerName}
             </span>
             <span className="text-xs text-muted-foreground">

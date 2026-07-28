@@ -125,7 +125,7 @@ export default function CustomersPage() {
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="font-medium text-foreground group-hover:text-secondary">
+              <span className="font-medium text-foreground group-hover:text-primary">
                 {row.original.name}
               </span>
               <span className="text-xs text-muted-foreground">

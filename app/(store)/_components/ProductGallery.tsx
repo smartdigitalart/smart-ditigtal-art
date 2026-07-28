@@ -10,6 +10,7 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel"
+import { ProductImagePreview } from "@/app/(store)/_components/ProductImagePreview"
 
 export function ProductGallery({
   images,
@@ -20,6 +21,7 @@ export function ProductGallery({
 }) {
   const [api, setApi] = useState<CarouselApi>()
   const [activeIndex, setActiveIndex] = useState(0)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   useEffect(() => {
     if (!api) return
@@ -70,7 +72,12 @@ export function ProductGallery({
         <CarouselContent>
           {images.map((image) => (
             <CarouselItem key={image.id}>
-              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-muted"
+                aria-label="View full image"
+              >
                 <Image
                   src={image.url}
                   alt={name}
@@ -79,11 +86,19 @@ export function ProductGallery({
                   priority
                   className="object-cover"
                 />
-              </div>
+              </button>
             </CarouselItem>
           ))}
         </CarouselContent>
       </Carousel>
+
+      <ProductImagePreview
+        images={images}
+        name={name}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        initialIndex={activeIndex}
+      />
     </div>
   )
 }
