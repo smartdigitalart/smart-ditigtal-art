@@ -105,7 +105,7 @@ export function ProductImagePreview({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton
-        className="flex h-[92vh] w-[95vw] max-w-[1600px] flex-col gap-3 bg-background p-3 sm:p-4"
+        className="flex h-[92vh] w-[95vw] max-w-[1600px] flex-col gap-3 bg-background p-3 sm:max-w-[1600px] sm:p-4"
       >
         <DialogTitle className="sr-only">{name}</DialogTitle>
 
