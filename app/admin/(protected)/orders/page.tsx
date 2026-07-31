@@ -8,15 +8,18 @@ import {
   ChevronDownIcon,
   ClockIcon,
   BanknoteIcon,
+  DownloadIcon,
   EyeIcon,
   PackageIcon,
   RefreshCcwIcon,
   RotateCcwIcon,
   Trash2Icon,
+  TriangleAlertIcon,
   XCircleIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table"
+import type { DateRange } from "react-day-picker"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -38,6 +41,7 @@ import {
 import { StatCard, StatCardGrid } from "@/components/stat-card"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
+import { DateRangeFilter } from "@/components/data-table/date-range-filter"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
 import { createSelectColumn } from "@/components/data-table/data-table-select-column"
 import {
@@ -47,6 +51,7 @@ import {
 import { useAdminOrders, useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
 import { ORDER_STATUS_STYLES, type Order, type OrderStatus } from "@/lib/types/order"
 import { formatOrderId } from "@/lib/orders/format-order-id"
+import { exportOrdersToCsv } from "@/lib/orders/export-orders-csv"
 
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
@@ -65,6 +70,17 @@ const BULK_STATUS_OPTIONS: { label: string; value: OrderStatus; icon: React.Reac
   { label: "Refunded", value: "Refunded", icon: <RotateCcwIcon className="text-muted-foreground" /> },
 ]
 
+const DELIVERY_ZONE_LABELS: Record<string, string> = {
+  inside_dhaka: "Inside Dhaka",
+  outside_dhaka: "Outside Dhaka",
+}
+
+const STALE_PENDING_DAYS = 2
+
+function daysSince(dateString: string): number {
+  return Math.floor((Date.now() - new Date(dateString).getTime()) / 86_400_000)
+}
+
 export default function OrdersPage() {
   const router = useRouter()
   const { data, isLoading: loading } = useAdminOrders()
@@ -72,20 +88,30 @@ export default function OrdersPage() {
   const orders = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
   const filtered = useMemo(() => {
     return orders.filter((order) => {
       if (status !== "all" && order.status !== status) return false
+      if (dateRange?.from) {
+        const createdAt = new Date(order.createdAt)
+        const from = new Date(dateRange.from)
+        from.setHours(0, 0, 0, 0)
+        const to = new Date(dateRange.to ?? dateRange.from)
+        to.setHours(23, 59, 59, 999)
+        if (createdAt < from || createdAt > to) return false
+      }
       return true
     })
-  }, [orders, status])
+  }, [orders, status, dateRange])
 
-  const hasActiveFilters = status !== "all" || search !== ""
+  const hasActiveFilters = status !== "all" || search !== "" || !!dateRange?.from
 
   const resetFilters = () => {
     setStatus("all")
     setSearch("")
+    setDateRange(undefined)
   }
 
   const selectedIndexes = useMemo(
@@ -144,8 +170,18 @@ export default function OrdersPage() {
               <span className="font-medium text-foreground group-hover:text-primary">
                 {formatOrderId(row.original.orderNumber)}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 {new Date(row.original.createdAt).toLocaleDateString()}
+                {row.original.status === "Pending" &&
+                  daysSince(row.original.createdAt) >= STALE_PENDING_DAYS && (
+                    <span
+                      className="flex items-center gap-0.5 text-chart-4"
+                      title={`Pending for ${daysSince(row.original.createdAt)} days`}
+                    >
+                      <TriangleAlertIcon className="size-3" />
+                      {daysSince(row.original.createdAt)}d
+                    </span>
+                  )}
               </span>
             </div>
           </Link>
@@ -191,6 +227,19 @@ export default function OrdersPage() {
         ),
       },
       {
+        accessorKey: "deliveryZone",
+        header: "Delivery",
+        cell: ({ row }) =>
+          row.original.deliveryZone ? (
+            <span className="text-sm text-muted-foreground">
+              {DELIVERY_ZONE_LABELS[row.original.deliveryZone] ??
+                row.original.deliveryZone}
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground">—</span>
+          ),
+      },
+      {
         accessorKey: "total",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Total" />
@@ -223,13 +272,35 @@ export default function OrdersPage() {
               icon: <EyeIcon />,
               onClick: () => router.push(`/admin/orders/${row.original.id}`),
             },
+            {
+              label: "Set status",
+              icon: <RefreshCcwIcon />,
+              items: BULK_STATUS_OPTIONS.map((option) => ({
+                label: option.label,
+                icon: option.icon,
+                active: row.original.status === option.value,
+                onClick: () => {
+                  updateStatus.mutate(
+                    { id: row.original.id, status: option.value },
+                    {
+                      onSuccess: () =>
+                        toast.success(
+                          `${formatOrderId(row.original.orderNumber)} marked as ${option.value}`
+                        ),
+                      onError: () =>
+                        toast.error("Failed to update order status"),
+                    }
+                  )
+                },
+              })),
+            },
           ]
           return <DataTableRowActions actions={actions} />
         },
         size: 40,
       },
     ],
-    [router]
+    [router, updateStatus]
   )
 
   return (
@@ -309,23 +380,45 @@ export default function OrdersPage() {
           )
         }
         filters={
-          <Select
-            value={status}
-            onValueChange={(value) => setStatus(value ?? "all")}
+          <>
+            <Select
+              value={status}
+              onValueChange={(value) => setStatus(value ?? "all")}
+            >
+              <SelectTrigger size="sm" className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {STATUS_ITEMS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          </>
+        }
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={filtered.length === 0}
+            onClick={() =>
+              exportOrdersToCsv(
+                selectedCount > 0
+                  ? selectedIndexes
+                      .map((index) => filtered[Number(index)])
+                      .filter((order): order is Order => !!order)
+                  : filtered
+              )
+            }
           >
-            <SelectTrigger size="sm" className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {STATUS_ITEMS.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            <DownloadIcon data-icon="inline-start" />
+            Export{selectedCount > 0 ? ` (${selectedCount})` : ""}
+          </Button>
         }
       />
 

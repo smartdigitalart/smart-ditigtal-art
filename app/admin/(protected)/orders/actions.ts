@@ -105,10 +105,22 @@ export async function getOrderStatusHistoryAction(
     .order("created_at", { ascending: false })
   if (error) throw error
 
+  const changerIds = [
+    ...new Set((data ?? []).map((row) => row.changed_by).filter((id): id is string => !!id)),
+  ]
+  const { data: profiles } =
+    changerIds.length > 0
+      ? await supabase.from("profiles").select("id, name, email").in("id", changerIds)
+      : { data: [] }
+  const nameById = new Map(
+    (profiles ?? []).map((p) => [p.id, p.name ?? p.email ?? "Admin"])
+  )
+
   return (data ?? []).map((row) => ({
     id: row.id as string,
     status: row.status as OrderStatus,
     changedBy: (row.changed_by as string | null) ?? null,
+    changedByName: row.changed_by ? (nameById.get(row.changed_by) ?? null) : null,
     createdAt: row.created_at as string,
   }))
 }

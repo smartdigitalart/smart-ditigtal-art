@@ -38,6 +38,7 @@ export interface OrderStatusHistoryEntry {
   id: string
   status: OrderStatus
   changedBy: string | null
+  changedByName: string | null
   createdAt: string
 }
 
