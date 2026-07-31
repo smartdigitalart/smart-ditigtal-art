@@ -41,8 +41,9 @@ async function getFeaturedProducts(): Promise<FeaturedProduct[]> {
       slug: row.slug,
       name: row.name,
       image: images?.[0]?.url ?? null,
-      displayPrice: minVariantPrice ?? salePrice ?? price,
-      originalPrice: minVariantPrice === undefined && salePrice !== null ? price : null,
+      hoverImage: images?.[1]?.url ?? null,
+      price: minVariantPrice ?? price,
+      salePrice: minVariantPrice !== undefined ? null : salePrice,
       isFromPrice: minVariantPrice !== undefined,
     }
   })

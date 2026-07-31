@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Mail } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
@@ -46,13 +47,105 @@ const socialLinks = [
    { name: "Facebook", href: "https://facebook.com/", Icon: FacebookIcon },
    { name: "Instagram", href: "https://instagram.com/", Icon: InstagramIcon },
    { name: "Messenger", href: "https://m.me/", Icon: MessengerIcon },
-   { name: "Email", href: "mailto:hello@smartdigitalart.com", Icon: Mail },
+   { name: "Email", href: "mailto:info@smartdigitalartbd.com", Icon: Mail },
+];
+
+const shopLinks = [
+   { label: "Art", href: "/shop?category=painting" },
+   { label: "Perfume", href: "/shop?category=perfume" },
+   { label: "All products", href: "/shop" },
 ];
 
 const Footer = () => {
    return (
-      <footer className="mt-auto ">
-         <h1>footer</h1>
+      <footer className="mt-auto w-full border-t border-border bg-muted/30">
+         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-4 py-12 sm:px-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+            <div className="flex flex-col gap-4">
+               <Image
+                  src="/SMART_DIGITAL_ART_PAD_LOGO.jpg.jpeg"
+                  alt="Smart Digital Art"
+                  width={180}
+                  height={180}
+                  className="h-10 w-auto self-start"
+               />
+               <p className="text-sm text-muted-foreground">
+                  Handmade & digital art, and signature perfumes — crafted with
+                  care, delivered across Bangladesh.
+               </p>
+               <div className="flex items-center gap-3">
+                  {socialLinks.map(({ name, href, Icon }) => (
+                     <a
+                        key={name}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        aria-label={name}
+                        className="flex size-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:text-foreground"
+                     >
+                        <Icon className="size-4" />
+                     </a>
+                  ))}
+               </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+               <h3 className="text-sm font-semibold text-foreground">Shop</h3>
+               <ul className="flex flex-col gap-2">
+                  {shopLinks.map((link) => (
+                     <li key={link.href}>
+                        <Link
+                           href={link.href}
+                           className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                           {link.label}
+                        </Link>
+                     </li>
+                  ))}
+               </ul>
+            </div>
+
+            <div className="flex flex-col gap-3">
+               <h3 className="text-sm font-semibold text-foreground">Account</h3>
+               <ul className="flex flex-col gap-2">
+                  <li>
+                     <Link
+                        href="/signin"
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                     >
+                        Sign in
+                     </Link>
+                  </li>
+                  <li>
+                     <Link
+                        href="/profile"
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                     >
+                        My profile
+                     </Link>
+                  </li>
+               </ul>
+            </div>
+
+            <div className="flex flex-col gap-3">
+               <h3 className="text-sm font-semibold text-foreground">Contact</h3>
+               <a
+                  href="mailto:info@smartdigitalartbd.com"
+                  className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+               >
+                  <Mail className="size-4" />
+                  info@smartdigitalartbd.com
+               </a>
+            </div>
+         </div>
+
+         <Separator />
+
+         <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <p className="text-center text-xs text-muted-foreground">
+               © {new Date().getFullYear()} Smart Digital Art. All rights
+               reserved.
+            </p>
+         </div>
       </footer>
    );
 };

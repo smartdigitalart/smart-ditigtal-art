@@ -28,9 +28,12 @@ export interface SignUpResult {
 }
 
 export interface Profile {
+   id: string;
    name: string | null;
    email: string | null;
    role: "customer" | "admin";
+   phone: string | null;
+   avatar: string | null;
 }
 
 interface AuthContextValue {

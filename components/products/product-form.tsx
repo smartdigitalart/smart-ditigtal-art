@@ -385,7 +385,6 @@ export function ProductForm({ product }: { product?: Product }) {
                   placeholder="A short, punchy summary of the product..."
                   minHeight="min-h-20"
                   toolbar="minimal"
-                  characterLimit={200}
                 />
               </CardContent>
             </Card>

@@ -123,7 +123,7 @@ export default function BrandsPage() {
               <AwardIcon className="size-4 text-muted-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="flex items-center gap-1.5 font-medium text-foreground group-hover:text-secondary">
+              <span className="flex items-center gap-1.5 font-medium text-foreground group-hover:text-primary">
                 {row.original.name}
                 {row.original.featured && (
                   <StarIcon className="size-3.5 fill-chart-3 text-chart-3" />

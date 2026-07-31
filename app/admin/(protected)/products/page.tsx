@@ -162,7 +162,7 @@ export default function ProductsPage() {
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
               <PackageIcon className="size-4 text-muted-foreground" />
             </div>
-            <span className="flex items-center gap-1.5 font-medium text-foreground group-hover:text-secondary">
+            <span className="flex items-center gap-1.5 font-medium text-foreground group-hover:text-primary">
               {row.original.name}
               {row.original.featured && (
                 <StarIcon className="size-3.5 fill-chart-3 text-chart-3" />
@@ -186,7 +186,7 @@ export default function ProductsPage() {
           return (
             <Link
               href={`/admin/categories/${row.original.categoryId}/edit`}
-              className="text-sm font-medium text-foreground hover:text-secondary"
+              className="text-sm font-medium text-foreground hover:text-primary"
             >
               {categoryName}
             </Link>
@@ -208,7 +208,7 @@ export default function ProductsPage() {
           return (
             <Link
               href={`/admin/brands/${row.original.brandId}/edit`}
-              className="text-sm font-medium text-foreground hover:text-secondary"
+              className="text-sm font-medium text-foreground hover:text-primary"
             >
               {brandName}
             </Link>

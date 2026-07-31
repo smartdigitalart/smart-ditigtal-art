@@ -41,7 +41,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      reset({ name: profile.name ?? "" , phone: "" })
+      reset({ name: profile.name ?? "", phone: profile.phone ?? "" })
     }
   }, [profile, reset])
 

@@ -14,14 +14,28 @@ export interface OrderItem {
   price: number
 }
 
+export type DeliveryZone = "inside_dhaka" | "outside_dhaka"
+
 export interface Order {
   id: string
   customerId: string | null
   customerName: string
   customerEmail: string
+  customerPhone: string
   paymentMethod: string
   status: OrderStatus
   total: number
+  shippingAddress: string | null
+  deliveryZone: DeliveryZone | null
+  deliveryCharge: number
   items: OrderItem[]
   createdAt: string
+}
+
+export const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
+  Pending: "bg-chart-3/10 text-chart-3",
+  Processing: "bg-chart-1/10 text-chart-1",
+  Completed: "bg-chart-2/10 text-chart-2",
+  Cancelled: "bg-destructive/10 text-destructive",
+  Refunded: "bg-muted text-muted-foreground",
 }

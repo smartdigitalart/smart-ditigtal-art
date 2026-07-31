@@ -1,19 +1,13 @@
 import { Hero } from "@/app/(store)/_components/Hero";
-import { FeaturedProducts } from "@/app/(store)/_components/FeaturedProducts";
+import { CategorySplitBanner } from "@/app/(store)/_components/CategorySplitBanner";
+import { CategoryProductsRow } from "@/app/(store)/_components/CategoryProductsRow";
 
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
       <Hero />
-      <FeaturedProducts />
-      <div className="flex flex-1 items-center justify-center px-4 py-24 text-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Smart Digital Art
-          </h1>
-          <p className="mt-4 text-muted-foreground">Coming soon.</p>
-        </div>
-      </div>
+      <CategorySplitBanner />
+      <CategoryProductsRow />
     </div>
   );
 }

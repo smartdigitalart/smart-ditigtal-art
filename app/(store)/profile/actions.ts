@@ -4,9 +4,12 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export interface OwnProfile {
+  id: string
   name: string | null
   email: string | null
   role: "customer" | "admin"
+  phone: string | null
+  avatar: string | null
 }
 
 export async function getOwnProfileAction(): Promise<OwnProfile | null> {
@@ -20,11 +23,20 @@ export async function getOwnProfileAction(): Promise<OwnProfile | null> {
   const admin = createAdminClient()
   const { data } = await admin
     .from("profiles")
-    .select("name, email, role")
+    .select("id, name, email, role, phone, avatar_url")
     .eq("id", user.id)
     .maybeSingle()
 
-  return data as OwnProfile | null
+  if (!data) return null
+
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    phone: data.phone,
+    avatar: data.avatar_url,
+  }
 }
 
 export async function updateOwnProfileAction(payload: {

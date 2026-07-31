@@ -3,25 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import type { Order, OrderStatus } from "@/lib/types/order"
-
-function mapOrder(
-  row: Record<string, unknown>,
-  customerName: string,
-  customerEmail: string,
-  items: Order["items"]
-): Order {
-  return {
-    id: row.id as string,
-    customerId: (row.customer_id as string | null) ?? null,
-    customerName,
-    customerEmail,
-    paymentMethod: "N/A",
-    status: row.status as OrderStatus,
-    total: Number(row.total),
-    items,
-    createdAt: row.created_at as string,
-  }
-}
+import { mapOrder } from "@/lib/orders/map-order"
 
 export async function listOrdersAction(): Promise<Order[]> {
   await requireAdminProfile()

@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutDashboardIcon, LogOutIcon, User, UserIcon } from "lucide-react";
+import { Suspense } from "react";
+import { LayoutDashboardIcon, LogOutIcon, ShoppingBagIcon, User, UserIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -17,10 +18,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
+import SearchBar from "@/app/(store)/_components/SearchBar";
+import { CartSheet } from "@/app/(store)/_components/CartSheet";
+import { useCartStore, cartItemCount } from "@/lib/store/cart-store";
 
 export default function Header() {
    const { user, profile, isAdmin, isAuthenticated, isLoading, logout } = useAuth();
    const router = useRouter();
+   const cartItems = useCartStore((state) => state.items);
+   const setCartOpen = useCartStore((state) => state.setOpen);
+   const cartCount = cartItemCount(cartItems);
 
    const displayName = profile?.name || user?.email || "Account";
    const initials = displayName.slice(0, 2).toUpperCase();
@@ -34,6 +41,7 @@ export default function Header() {
    };
 
    return (
+      <>
       <header className="w-full border-b border-border">
          <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             <Link href="/" className="shrink-0">
@@ -46,6 +54,26 @@ export default function Header() {
                   priority
                />
             </Link>
+
+            <div className="hidden flex-1 justify-center sm:flex">
+               <Suspense fallback={<div className="h-9 w-full max-w-md" />}>
+                  <SearchBar />
+               </Suspense>
+            </div>
+
+            <button
+               type="button"
+               onClick={() => setCartOpen(true)}
+               aria-label="Open cart"
+               className="relative flex size-9 shrink-0 items-center justify-center rounded-full text-foreground/80 outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+               <ShoppingBagIcon className="size-5" />
+               {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                     {cartCount > 9 ? "9+" : cartCount}
+                  </span>
+               )}
+            </button>
 
             {isLoading ? (
                <Skeleton className="size-8 rounded-full" />
@@ -102,6 +130,13 @@ export default function Header() {
                </Link>
             )}
          </div>
+         <div className="mx-auto w-full max-w-7xl px-4 pb-3 sm:hidden">
+            <Suspense fallback={<div className="h-9 w-full" />}>
+               <SearchBar />
+            </Suspense>
+         </div>
       </header>
+      <CartSheet />
+      </>
    );
 }

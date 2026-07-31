@@ -1,43 +1,71 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import Image from "next/image"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel"
+import { cn } from "@/lib/utils"
 
 const banners = [
-  { title: "Banner 1", className: "bg-muted" },
-  { title: "Banner 2", className: "bg-secondary" },
-  { title: "Banner 3", className: "bg-muted" },
-  { title: "Banner 4", className: "bg-secondary" },
+  { id: "banner-1", src: "/banner-1.jpeg", alt: "Smart Digital Art banner 1" },
+  { id: "banner-2", src: "/banner-2.jpeg", alt: "Smart Digital Art banner 2" },
 ]
 
 export function Hero() {
+  const [api, setApi] = useState<CarouselApi>()
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    if (!api) return
+    setActiveIndex(api.selectedScrollSnap())
+    api.on("select", () => setActiveIndex(api.selectedScrollSnap()))
+  }, [api])
+
   return (
     <section className="w-full py-8">
-      <Carousel
-        className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
-        opts={{ loop: true }}
-      >
-        <CarouselContent>
-          {banners.map((banner) => (
-            <CarouselItem key={banner.title}>
-              <div
-                className={`flex h-64 items-center justify-center rounded-lg sm:h-80 md:h-96 ${banner.className}`}
-              >
-                <span className="text-2xl font-semibold text-muted-foreground">
-                  {banner.title}
-                </span>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="left-2" />
-        <CarouselNext className="right-2" />
-      </Carousel>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Carousel setApi={setApi} opts={{ loop: true }}>
+          <CarouselContent>
+            {banners.map((banner, index) => (
+              <CarouselItem key={banner.id}>
+                <div className="relative aspect-[1376/768] w-full overflow-hidden rounded-lg bg-muted">
+                  <Image
+                    src={banner.src}
+                    alt={banner.alt}
+                    fill
+                    sizes="(min-width: 1280px) 1280px, 100vw"
+                    priority={index === 0}
+                    className="object-cover"
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+
+        {banners.length > 1 && (
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {banners.map((banner, index) => (
+              <button
+                key={banner.id}
+                type="button"
+                onClick={() => api?.scrollTo(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                className={cn(
+                  "h-2 rounded-full transition-all",
+                  index === activeIndex
+                    ? "w-6 bg-primary"
+                    : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                )}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   )
 }

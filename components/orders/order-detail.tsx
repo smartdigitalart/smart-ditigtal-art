@@ -36,7 +36,7 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
 import { useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
-import { type Order, type OrderStatus } from "@/lib/types/order"
+import { ORDER_STATUS_STYLES, type Order, type OrderStatus } from "@/lib/types/order"
 
 const STATUS_ITEMS: { label: string; value: OrderStatus; icon: React.ReactNode }[] = [
   { label: "Pending", value: "Pending", icon: <ClockIcon className="text-chart-3" /> },
@@ -46,15 +46,18 @@ const STATUS_ITEMS: { label: string; value: OrderStatus; icon: React.ReactNode }
   { label: "Refunded", value: "Refunded", icon: <RotateCcwIcon className="text-muted-foreground" /> },
 ]
 
-const STATUS_STYLES: Record<OrderStatus, string> = {
-  Pending: "bg-chart-3/10 text-chart-3",
-  Processing: "bg-chart-1/10 text-chart-1",
-  Completed: "bg-chart-2/10 text-chart-2",
-  Cancelled: "bg-destructive/10 text-destructive",
-  Refunded: "bg-muted text-muted-foreground",
+const DELIVERY_ZONE_LABELS: Record<string, string> = {
+  inside_dhaka: "Inside Dhaka",
+  outside_dhaka: "Outside Dhaka",
 }
 
-export function OrderDetail({ order }: { order: Order }) {
+export function OrderDetail({
+  order,
+  viewer = "admin",
+}: {
+  order: Order
+  viewer?: "admin" | "customer"
+}) {
   const router = useRouter()
   const updateStatus = useUpdateOrderStatus()
   const [savedStatus, setSavedStatus] = useState<OrderStatus>(order.status)
@@ -79,7 +82,9 @@ export function OrderDetail({ order }: { order: Order }) {
             variant="ghost"
             size="sm"
             className="-ml-2 mb-2"
-            onClick={() => router.push("/admin/orders")}
+            onClick={() =>
+              router.push(viewer === "admin" ? "/admin/orders" : "/profile/orders")
+            }
           >
             <ArrowLeftIcon data-icon="inline-start" />
             Back to orders
@@ -93,7 +98,7 @@ export function OrderDetail({ order }: { order: Order }) {
         </div>
         <Badge
           variant="outline"
-          className={`border-transparent ${STATUS_STYLES[savedStatus]}`}
+          className={`border-transparent ${ORDER_STATUS_STYLES[savedStatus]}`}
         >
           {savedStatus}
         </Badge>
@@ -153,7 +158,7 @@ export function OrderDetail({ order }: { order: Order }) {
                 href={`/admin/customers/${order.customerId}/edit`}
                 className="group flex flex-col gap-1"
               >
-                <span className="text-sm font-medium text-foreground group-hover:text-secondary">
+                <span className="text-sm font-medium text-foreground group-hover:text-primary">
                   {order.customerName}
                 </span>
                 <span className="text-sm text-muted-foreground">
