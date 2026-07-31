@@ -4,10 +4,8 @@ import { notFound } from "next/navigation"
 import { getProductByIdAction } from "@/app/admin/(protected)/products/actions"
 import { getCategoryByIdAction } from "@/app/admin/(protected)/categories/actions"
 import { getBrandByIdAction } from "@/app/admin/(protected)/brands/actions"
-import { ProductGallery } from "@/app/(store)/_components/ProductGallery"
-import { ProductPurchaseSection } from "@/app/(store)/_components/ProductPurchaseSection"
+import { ProductDetailInteractive } from "@/app/(store)/_components/ProductDetailInteractive"
 import { RelatedProducts } from "@/app/(store)/_components/RelatedProducts"
-import { AdminEditProductButton } from "@/components/products/admin-edit-product-button"
 
 export default async function ProductDetailPage({
   params,
@@ -49,44 +47,17 @@ export default async function ProductDetailPage({
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-2">
-          {/* Left: image gallery */}
-          <div>
-            <ProductGallery images={product.images} name={product.name} />
-          </div>
-
-          {/* Right: product info */}
-          <div className="flex flex-col gap-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                {brand && (
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {brand.name}
-                  </p>
-                )}
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                  {product.name}
-                </h1>
-              </div>
-              <AdminEditProductButton productId={product.id} />
-            </div>
-
-            {product.shortDescription && (
-              <div
-                className="prose prose-sm max-w-none text-muted-foreground"
-                dangerouslySetInnerHTML={{ __html: product.shortDescription }}
-              />
-            )}
-
-            <ProductPurchaseSection
-              productId={product.id}
-              name={product.name}
-              price={product.price}
-              salePrice={product.salePrice}
-              image={product.images[0]?.url ?? null}
-              inStock={product.inStock}
-              variants={product.variants.map((variant) => ({ ...variant, id: variant.id! }))}
-            />
-          </div>
+          <ProductDetailInteractive
+            productId={product.id}
+            name={product.name}
+            brandName={brand?.name ?? null}
+            shortDescription={product.shortDescription}
+            price={product.price}
+            salePrice={product.salePrice}
+            images={product.images}
+            inStock={product.inStock}
+            variants={product.variants.map((variant) => ({ ...variant, id: variant.id! }))}
+          />
         </div>
 
         {product.description && (

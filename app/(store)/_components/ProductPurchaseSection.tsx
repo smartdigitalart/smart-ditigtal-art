@@ -24,6 +24,8 @@ export function ProductPurchaseSection({
   image,
   inStock,
   variants,
+  selectedVariantId: controlledVariantId,
+  onSelectVariant,
 }: {
   productId: string
   name: string
@@ -32,11 +34,15 @@ export function ProductPurchaseSection({
   image: string | null
   inStock: boolean
   variants: ProductVariantOption[]
+  selectedVariantId?: string | null
+  onSelectVariant?: (variantId: string | null) => void
 }) {
   const hasVariants = variants.length > 0
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+  const [uncontrolledVariantId, setUncontrolledVariantId] = useState<string | null>(
     hasVariants ? variants[0].id : null
   )
+  const selectedVariantId = onSelectVariant ? controlledVariantId ?? null : uncontrolledVariantId
+  const setSelectedVariantId = onSelectVariant ?? setUncontrolledVariantId
   const selectedVariant =
     variants.find((variant) => variant.id === selectedVariantId) ?? null
 
