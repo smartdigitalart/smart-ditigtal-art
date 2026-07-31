@@ -5,6 +5,15 @@ export interface ProductImageRecord {
   url: string
 }
 
+export interface ProductVariant {
+  id?: string
+  label: string
+  price: number
+  salePrice: number | null
+  image: string | null
+  inStock: boolean
+}
+
 export interface Product {
   id: string
   name: string
@@ -19,6 +28,7 @@ export interface Product {
   description: string
   shortDescription: string
   images: ProductImageRecord[]
+  variants: ProductVariant[]
   createdAt: string
 }
 
@@ -35,4 +45,5 @@ export interface ProductPayload {
   description: string
   shortDescription: string
   images: ProductImageRecord[]
+  variants: ProductVariant[]
 }

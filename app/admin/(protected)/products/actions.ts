@@ -8,9 +8,23 @@ import {
   uploadImageToMediaBucket,
   type ImageUploadResult,
 } from "@/lib/supabase/upload-image"
-import type { Product, ProductPayload } from "@/lib/types/product"
+import type { Product, ProductPayload, ProductVariant } from "@/lib/types/product"
 
-function mapProduct(row: Record<string, unknown>): Product {
+function mapVariant(row: Record<string, unknown>): ProductVariant {
+  return {
+    id: row.id as string,
+    label: row.label as string,
+    price: Number(row.price),
+    salePrice: row.sale_price !== null && row.sale_price !== undefined ? Number(row.sale_price) : null,
+    image: (row.image as string | null) ?? null,
+    inStock: Boolean(row.in_stock),
+  }
+}
+
+function mapProduct(
+  row: Record<string, unknown>,
+  variants: ProductVariant[] = []
+): Product {
   return {
     id: row.id as string,
     name: row.name as string,
@@ -25,6 +39,7 @@ function mapProduct(row: Record<string, unknown>): Product {
     description: (row.description as string) ?? "",
     shortDescription: (row.short_description as string) ?? "",
     images: (row.images as Product["images"]) ?? [],
+    variants,
     createdAt: row.created_at as string,
   }
 }
@@ -36,7 +51,22 @@ export async function listProductsAction(): Promise<Product[]> {
     .select("*")
     .order("created_at", { ascending: false })
   if (error) throw error
-  return (data ?? []).map(mapProduct)
+
+  const { data: variantRows } = await supabase
+    .from("product_variants")
+    .select("*")
+    .order("sort_order", { ascending: true })
+
+  const variantsByProduct = new Map<string, ProductVariant[]>()
+  for (const row of variantRows ?? []) {
+    const list = variantsByProduct.get(row.product_id) ?? []
+    list.push(mapVariant(row))
+    variantsByProduct.set(row.product_id, list)
+  }
+
+  return (data ?? []).map((row) =>
+    mapProduct(row, variantsByProduct.get(row.id as string) ?? [])
+  )
 }
 
 export async function getProductByIdAction(id: string): Promise<Product | null> {
@@ -47,7 +77,14 @@ export async function getProductByIdAction(id: string): Promise<Product | null> 
     .eq("id", id)
     .maybeSingle()
   if (error || !data) return null
-  return mapProduct(data)
+
+  const { data: variantRows } = await supabase
+    .from("product_variants")
+    .select("*")
+    .eq("product_id", id)
+    .order("sort_order", { ascending: true })
+
+  return mapProduct(data, (variantRows ?? []).map(mapVariant))
 }
 
 function slugFromName(name: string) {
@@ -56,6 +93,28 @@ function slugFromName(name: string) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
+}
+
+async function replaceVariants(
+  supabase: ReturnType<typeof createAdminClient>,
+  productId: string,
+  variants: ProductVariant[]
+) {
+  await supabase.from("product_variants").delete().eq("product_id", productId)
+  if (variants.length === 0) return
+
+  const { error } = await supabase.from("product_variants").insert(
+    variants.map((variant, index) => ({
+      product_id: productId,
+      label: variant.label,
+      price: variant.price,
+      sale_price: variant.salePrice,
+      image: variant.image,
+      in_stock: variant.inStock,
+      sort_order: index,
+    }))
+  )
+  if (error) throw error
 }
 
 export async function createProductAction(
@@ -83,7 +142,9 @@ export async function createProductAction(
     .select()
     .single()
   if (error) throw error
-  return mapProduct(data)
+
+  await replaceVariants(supabase, data.id, payload.variants)
+  return mapProduct(data, payload.variants)
 }
 
 export async function updateProductAction(
@@ -111,7 +172,9 @@ export async function updateProductAction(
     .select()
     .single()
   if (error) throw error
-  return mapProduct(data)
+
+  await replaceVariants(supabase, id, payload.variants)
+  return mapProduct(data, payload.variants)
 }
 
 export async function deleteProductAction(id: string): Promise<void> {

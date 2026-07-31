@@ -1,19 +1,23 @@
 import Image from "next/image"
+import Link from "next/link"
 import { PackageIcon } from "lucide-react"
 
 export interface FeaturedProduct {
   id: string
+  slug: string
   name: string
-  price: number
-  salePrice: number | null
   image: string | null
+  displayPrice: number
+  originalPrice: number | null
+  isFromPrice: boolean
 }
 
 export function ProductCard({ product }: { product: FeaturedProduct }) {
-  const hasSale = product.salePrice != null && product.salePrice < product.price
-
   return (
-    <div className="group flex flex-col gap-3">
+    <Link
+      href={`/products/${product.slug}`}
+      className="group flex flex-col gap-3"
+    >
       <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
         {product.image ? (
           <Image
@@ -34,22 +38,16 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
           {product.name}
         </h3>
         <div className="flex items-center gap-2">
-          {hasSale ? (
-            <>
-              <span className="text-sm font-semibold text-foreground">
-                ৳{product.salePrice!.toFixed(2)}
-              </span>
-              <span className="text-xs text-muted-foreground line-through">
-                ৳{product.price.toFixed(2)}
-              </span>
-            </>
-          ) : (
-            <span className="text-sm font-semibold text-foreground">
-              ৳{product.price.toFixed(2)}
+          <span className="text-sm font-semibold text-foreground">
+            {product.isFromPrice && "From "}৳{product.displayPrice.toFixed(2)}
+          </span>
+          {product.originalPrice != null && (
+            <span className="text-xs text-muted-foreground line-through">
+              ৳{product.originalPrice.toFixed(2)}
             </span>
           )}
         </div>
       </div>
-    </div>
+    </Link>
   )
 }

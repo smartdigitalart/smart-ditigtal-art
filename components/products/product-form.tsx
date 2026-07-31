@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { ArrowLeftIcon, Loader2 } from "lucide-react"
+import { ArrowLeftIcon, Loader2, PlusIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,7 @@ import {
   ProductImageUpload,
   type ProductImage,
 } from "@/components/products/product-image-upload"
+import { SingleImageUpload } from "@/components/shared/single-image-upload"
 import { CategoryDialogForm } from "@/components/categories/category-dialog-form"
 import { BrandDialogForm } from "@/components/brands/brand-dialog-form"
 import { EntityCombobox } from "@/components/products/entity-combobox"
@@ -43,6 +44,14 @@ import { useAdminBrands } from "@/lib/api/use-admin-brands"
 import { useAdminCategories } from "@/lib/api/use-admin-categories"
 import type { Product } from "@/lib/types/product"
 
+export interface ProductVariantFormValue {
+  label: string
+  price: number
+  salePrice: number | null
+  image: string | null
+  inStock: boolean
+}
+
 export interface ProductFormValues {
   name: string
   categoryId: string
@@ -54,6 +63,7 @@ export interface ProductFormValues {
   featured: boolean
   description: string
   shortDescription: string
+  variants: ProductVariantFormValue[]
 }
 
 export function ProductForm({ product }: { product?: Product }) {
@@ -76,6 +86,7 @@ export function ProductForm({ product }: { product?: Product }) {
     handleSubmit,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<ProductFormValues>({
     defaultValues: {
@@ -89,8 +100,29 @@ export function ProductForm({ product }: { product?: Product }) {
       featured: product?.featured ?? false,
       description: product?.description ?? "",
       shortDescription: product?.shortDescription ?? "",
+      variants: (product?.variants ?? []).map((variant) => ({
+        label: variant.label,
+        price: variant.price,
+        salePrice: variant.salePrice,
+        image: variant.image,
+        inStock: variant.inStock,
+      })),
     },
   })
+
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({ control, name: "variants" })
+
+  const uploadVariantImage = (formData: FormData) => {
+    const file = formData.get("file")
+    const payload = new FormData()
+    payload.append("productId", productId)
+    if (file) payload.append("file", file)
+    return uploadProductImageAction(payload)
+  }
 
   const categoryId = watch("categoryId")
   const brandId = watch("brandId")
@@ -209,6 +241,133 @@ export function ProductForm({ product }: { product?: Product }) {
                   productId={productId}
                   originalImages={product?.images ?? []}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Variants</CardTitle>
+                <CardDescription>
+                  Optional. Add options like sizes or editions that each have
+                  their own price and, optionally, their own image (e.g.
+                  &ldquo;100ml&rdquo; / &ldquo;200ml&rdquo;, or &ldquo;With
+                  frame&rdquo; / &ldquo;Without frame&rdquo;). Leave empty for
+                  a simple product using the price below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                {variantFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-start"
+                  >
+                    <SingleImageUpload
+                      value={watch(`variants.${index}.image`)}
+                      onChange={(url) => setValue(`variants.${index}.image`, url)}
+                      uploadAction={uploadVariantImage}
+                      size="size-16"
+                      label="Image"
+                    />
+                    <div className="grid flex-1 grid-cols-2 gap-3">
+                      <Field
+                        className="col-span-2"
+                        data-invalid={!!errors.variants?.[index]?.label}
+                      >
+                        <FieldLabel htmlFor={`variant-label-${index}`}>
+                          Label
+                        </FieldLabel>
+                        <Input
+                          id={`variant-label-${index}`}
+                          placeholder="e.g. 100ml"
+                          aria-invalid={!!errors.variants?.[index]?.label}
+                          {...register(`variants.${index}.label`, {
+                            required: "Label is required",
+                          })}
+                        />
+                        <FieldError errors={[errors.variants?.[index]?.label]} />
+                      </Field>
+                      <Field data-invalid={!!errors.variants?.[index]?.price}>
+                        <FieldLabel htmlFor={`variant-price-${index}`}>
+                          Price (৳)
+                        </FieldLabel>
+                        <Input
+                          id={`variant-price-${index}`}
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          aria-invalid={!!errors.variants?.[index]?.price}
+                          {...register(`variants.${index}.price`, {
+                            required: "Price is required",
+                            valueAsNumber: true,
+                            min: { value: 0, message: "Must be positive" },
+                          })}
+                        />
+                        <FieldError errors={[errors.variants?.[index]?.price]} />
+                      </Field>
+                      <Field>
+                        <FieldLabel htmlFor={`variant-sale-price-${index}`}>
+                          Sale price (৳)
+                        </FieldLabel>
+                        <Input
+                          id={`variant-sale-price-${index}`}
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Optional"
+                          {...register(`variants.${index}.salePrice`, {
+                            setValueAs: (value) =>
+                              value === "" || value === null
+                                ? null
+                                : Number(value),
+                          })}
+                        />
+                      </Field>
+                      <Field orientation="horizontal" className="col-span-2 justify-between">
+                        <FieldLabel
+                          htmlFor={`variant-in-stock-${index}`}
+                          className="font-normal"
+                        >
+                          In stock
+                        </FieldLabel>
+                        <Switch
+                          id={`variant-in-stock-${index}`}
+                          checked={watch(`variants.${index}.inStock`)}
+                          onCheckedChange={(checked) =>
+                            setValue(`variants.${index}.inStock`, checked)
+                          }
+                        />
+                      </Field>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Remove variant"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => removeVariant(index)}
+                    >
+                      <XIcon />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() =>
+                    appendVariant({
+                      label: "",
+                      price: 0,
+                      salePrice: null,
+                      image: null,
+                      inStock: true,
+                    })
+                  }
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  Add variant
+                </Button>
               </CardContent>
             </Card>
 
