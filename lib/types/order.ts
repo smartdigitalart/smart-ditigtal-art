@@ -29,7 +29,15 @@ export interface Order {
   shippingAddress: string | null
   deliveryZone: DeliveryZone | null
   deliveryCharge: number
+  adminNotes: string | null
   items: OrderItem[]
+  createdAt: string
+}
+
+export interface OrderStatusHistoryEntry {
+  id: string
+  status: OrderStatus
+  changedBy: string | null
   createdAt: string
 }
 

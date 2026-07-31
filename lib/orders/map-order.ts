@@ -19,6 +19,7 @@ export function mapOrder(
     shippingAddress: (row.shipping_address as string | null) ?? null,
     deliveryZone: (row.delivery_zone as Order["deliveryZone"]) ?? null,
     deliveryCharge: Number(row.delivery_charge ?? 0),
+    adminNotes: (row.admin_notes as string | null) ?? null,
     items,
     createdAt: row.created_at as string,
   }

@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdminProfile } from "@/lib/supabase/require-admin"
-import type { Order, OrderStatus } from "@/lib/types/order"
+import type { Order, OrderStatus, OrderStatusHistoryEntry } from "@/lib/types/order"
 import { mapOrder } from "@/lib/orders/map-order"
 
 export async function listOrdersAction(): Promise<Order[]> {
@@ -83,8 +83,58 @@ export async function updateOrderStatusAction(
   id: string,
   status: OrderStatus
 ): Promise<void> {
-  await requireAdminProfile()
+  const admin = await requireAdminProfile()
   const supabase = createAdminClient()
   const { error } = await supabase.from("orders").update({ status }).eq("id", id)
+  if (error) throw error
+
+  await supabase
+    .from("order_status_history")
+    .insert({ order_id: id, status, changed_by: admin.id })
+}
+
+export async function getOrderStatusHistoryAction(
+  id: string
+): Promise<OrderStatusHistoryEntry[]> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from("order_status_history")
+    .select("id, status, changed_by, created_at")
+    .eq("order_id", id)
+    .order("created_at", { ascending: false })
+  if (error) throw error
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    status: row.status as OrderStatus,
+    changedBy: (row.changed_by as string | null) ?? null,
+    createdAt: row.created_at as string,
+  }))
+}
+
+export async function updateOrderNotesAction(
+  id: string,
+  adminNotes: string
+): Promise<void> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("orders")
+    .update({ admin_notes: adminNotes || null })
+    .eq("id", id)
+  if (error) throw error
+}
+
+export async function updateOrderShippingAddressAction(
+  id: string,
+  shippingAddress: string
+): Promise<void> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("orders")
+    .update({ shipping_address: shippingAddress || null })
+    .eq("id", id)
   if (error) throw error
 }

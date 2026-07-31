@@ -18,13 +18,26 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+export interface DataTableRowSubActionItem {
+  label: string
+  icon?: React.ReactNode
+  onClick: () => void
+  active?: boolean
+}
 
 export interface DataTableRowAction {
   label: string
   icon?: React.ReactNode
-  onClick: () => void
+  /** Either onClick or items must be provided. */
+  onClick?: () => void
+  /** Renders this action as a submenu instead of a direct click action. */
+  items?: DataTableRowSubActionItem[]
   destructive?: boolean
   separatorBefore?: boolean
   confirm?: {
@@ -59,23 +72,44 @@ export function DataTableRowActions({
             {actions.map((action, index) => (
               <Fragment key={action.label}>
                 {action.separatorBefore && index > 0 && <DropdownMenuSeparator />}
-                <DropdownMenuItem
-                  variant={action.destructive ? "destructive" : "default"}
-                  onSelect={(event) => {
-                    if (action.confirm) {
-                      event.preventDefault()
-                      setPendingAction(action)
-                    }
-                  }}
-                  onClick={() => {
-                    if (!action.confirm) {
-                      action.onClick()
-                    }
-                  }}
-                >
-                  {action.icon}
-                  {action.label}
-                </DropdownMenuItem>
+                {action.items ? (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      {action.icon}
+                      {action.label}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {action.items.map((item) => (
+                        <DropdownMenuItem
+                          key={item.label}
+                          disabled={item.active}
+                          onClick={item.onClick}
+                        >
+                          {item.icon}
+                          {item.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                ) : (
+                  <DropdownMenuItem
+                    variant={action.destructive ? "destructive" : "default"}
+                    onSelect={(event) => {
+                      if (action.confirm) {
+                        event.preventDefault()
+                        setPendingAction(action)
+                      }
+                    }}
+                    onClick={() => {
+                      if (!action.confirm) {
+                        action.onClick?.()
+                      }
+                    }}
+                  >
+                    {action.icon}
+                    {action.label}
+                  </DropdownMenuItem>
+                )}
               </Fragment>
             ))}
           </DropdownMenuGroup>
@@ -100,7 +134,7 @@ export function DataTableRowActions({
             <AlertDialogAction
               variant={pendingAction?.destructive ? "destructive" : "default"}
               onClick={() => {
-                pendingAction?.onClick()
+                pendingAction?.onClick?.()
                 setPendingAction(null)
               }}
             >

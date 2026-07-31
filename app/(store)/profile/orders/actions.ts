@@ -22,7 +22,9 @@ export async function listMyOrdersAction(): Promise<Order[]> {
 
   const { data: orders, error } = await admin
     .from("orders")
-    .select("*")
+    .select(
+      "id, customer_id, status, total, created_at, updated_at, customer_name, customer_phone, shipping_address, delivery_zone, delivery_charge, order_number"
+    )
     .eq("customer_id", user.id)
     .order("created_at", { ascending: false })
   if (error) throw error
@@ -60,7 +62,9 @@ export async function getMyOrderByIdAction(id: string): Promise<Order | null> {
 
   const { data: order, error } = await admin
     .from("orders")
-    .select("*")
+    .select(
+      "id, customer_id, status, total, created_at, updated_at, customer_name, customer_phone, shipping_address, delivery_zone, delivery_charge, order_number"
+    )
     .eq("id", id)
     .eq("customer_id", user.id)
     .maybeSingle()
