@@ -14,7 +14,7 @@ export function BuyNowCheckout({
   return (
     <CheckoutForm
       items={[item]}
-      onQuantityChange={(_, quantity) =>
+      onQuantityChange={(_productId, _variantId, quantity) =>
         setItem((prev) => ({ ...prev, quantity: Math.max(1, quantity) }))
       }
     />

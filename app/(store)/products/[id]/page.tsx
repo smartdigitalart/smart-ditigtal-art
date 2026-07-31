@@ -1,13 +1,11 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { PackageCheckIcon, PackageXIcon } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { getProductByIdAction } from "@/app/admin/(protected)/products/actions"
 import { getCategoryByIdAction } from "@/app/admin/(protected)/categories/actions"
 import { getBrandByIdAction } from "@/app/admin/(protected)/brands/actions"
 import { ProductGallery } from "@/app/(store)/_components/ProductGallery"
-import { ProductPurchasePanel } from "@/app/(store)/_components/ProductPurchasePanel"
+import { ProductPurchaseSection } from "@/app/(store)/_components/ProductPurchaseSection"
 import { RelatedProducts } from "@/app/(store)/_components/RelatedProducts"
 import { AdminEditProductButton } from "@/components/products/admin-edit-product-button"
 
@@ -27,8 +25,6 @@ export default async function ProductDetailPage({
     getCategoryByIdAction(product.categoryId),
     getBrandByIdAction(product.brandId),
   ])
-
-  const hasSale = product.salePrice != null && product.salePrice < product.price
 
   return (
     <div className="flex flex-1 flex-col">
@@ -74,39 +70,6 @@ export default async function ProductDetailPage({
               <AdminEditProductButton productId={product.id} />
             </div>
 
-            <div className="flex items-center gap-3">
-              {hasSale ? (
-                <>
-                  <span className="text-3xl font-bold text-foreground">
-                    ৳{product.salePrice!.toFixed(2)}
-                  </span>
-                  <span className="text-lg text-muted-foreground line-through">
-                    ৳{product.price.toFixed(2)}
-                  </span>
-                </>
-              ) : (
-                <span className="text-3xl font-bold text-foreground">
-                  ৳{product.price.toFixed(2)}
-                </span>
-              )}
-            </div>
-
-            <Badge
-              variant="outline"
-              className={`w-fit border-transparent ${
-                product.inStock
-                  ? "bg-chart-2/10 text-chart-2"
-                  : "bg-destructive/10 text-destructive"
-              }`}
-            >
-              {product.inStock ? (
-                <PackageCheckIcon data-icon="inline-start" />
-              ) : (
-                <PackageXIcon data-icon="inline-start" />
-              )}
-              {product.inStock ? "In Stock" : "Out of Stock"}
-            </Badge>
-
             {product.shortDescription && (
               <div
                 className="prose prose-sm max-w-none text-muted-foreground"
@@ -114,13 +77,14 @@ export default async function ProductDetailPage({
               />
             )}
 
-            <ProductPurchasePanel
+            <ProductPurchaseSection
               productId={product.id}
               name={product.name}
               price={product.price}
               salePrice={product.salePrice}
               image={product.images[0]?.url ?? null}
               inStock={product.inStock}
+              variants={product.variants.map((variant) => ({ ...variant, id: variant.id! }))}
             />
           </div>
         </div>

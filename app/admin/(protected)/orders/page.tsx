@@ -46,6 +46,7 @@ import {
 } from "@/components/data-table/data-table-row-actions"
 import { useAdminOrders, useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
 import { ORDER_STATUS_STYLES, type Order, type OrderStatus } from "@/lib/types/order"
+import { formatOrderId } from "@/lib/orders/format-order-id"
 
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
@@ -141,7 +142,7 @@ export default function OrdersPage() {
             </div>
             <div className="flex flex-col">
               <span className="font-medium text-foreground group-hover:text-primary">
-                {row.original.id}
+                {formatOrderId(row.original.orderNumber)}
               </span>
               <span className="text-xs text-muted-foreground">
                 {new Date(row.original.createdAt).toLocaleDateString()}
@@ -167,6 +168,17 @@ export default function OrdersPage() {
               {row.original.customerEmail}
             </span>
           </Link>
+        ),
+      },
+      {
+        accessorKey: "customerPhone",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Phone" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.customerPhone || "—"}
+          </span>
         ),
       },
       {

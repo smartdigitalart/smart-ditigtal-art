@@ -7,24 +7,34 @@ import { CartCheckout } from "@/app/(store)/checkout/CartCheckout"
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ productId?: string; qty?: string }>
+  searchParams: Promise<{ productId?: string; qty?: string; variantId?: string }>
 }) {
-  const { productId, qty } = await searchParams
+  const { productId, qty, variantId } = await searchParams
 
   let buyNowItem = null
   if (productId) {
     const product = await getProductByIdAction(productId)
 
-    if (!product || product.status !== "ACTIVE" || !product.inStock) {
+    if (!product || product.status !== "ACTIVE") {
+      notFound()
+    }
+
+    const variant = variantId
+      ? product.variants.find((v) => v.id === variantId)
+      : null
+
+    if (variant ? !variant.inStock : !product.inStock) {
       notFound()
     }
 
     buyNowItem = {
       productId: product.id,
+      variantId: variant?.id ?? null,
+      variantLabel: variant?.label ?? null,
       name: product.name,
-      price: product.price,
-      salePrice: product.salePrice,
-      image: product.images[0]?.url ?? null,
+      price: variant ? variant.price : product.price,
+      salePrice: variant ? variant.salePrice : product.salePrice,
+      image: variant?.image ?? product.images[0]?.url ?? null,
       quantity: Math.max(1, Number(qty) || 1),
     }
   }

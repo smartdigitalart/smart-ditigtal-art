@@ -4,6 +4,7 @@ import { PackageIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ORDER_STATUS_STYLES } from "@/lib/types/order"
+import { formatOrderId } from "@/lib/orders/format-order-id"
 import { listMyOrdersAction } from "@/app/(store)/profile/orders/actions"
 
 export default async function MyOrdersPage() {
@@ -42,11 +43,11 @@ export default async function MyOrdersPage() {
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                     <PackageIcon className="size-4 text-muted-foreground" />
                   </div>
-                  <div className="flex flex-1 flex-col">
-                    <span className="text-sm font-medium text-foreground">
-                      {order.id}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {formatOrderId(order.orderNumber)}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="truncate text-xs text-muted-foreground">
                       {new Date(order.createdAt).toLocaleDateString()} ·{" "}
                       {order.items.length} item
                       {order.items.length > 1 ? "s" : ""}
@@ -54,11 +55,11 @@ export default async function MyOrdersPage() {
                   </div>
                   <Badge
                     variant="outline"
-                    className={`border-transparent ${ORDER_STATUS_STYLES[order.status]}`}
+                    className={`shrink-0 border-transparent ${ORDER_STATUS_STYLES[order.status]}`}
                   >
                     {order.status}
                   </Badge>
-                  <span className="w-20 text-right text-sm font-semibold tabular-nums text-foreground">
+                  <span className="w-20 shrink-0 text-right text-sm font-semibold tabular-nums text-foreground">
                     ৳{order.total.toFixed(2)}
                   </span>
                 </CardContent>

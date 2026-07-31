@@ -18,6 +18,7 @@ export type DeliveryZone = "inside_dhaka" | "outside_dhaka"
 
 export interface Order {
   id: string
+  orderNumber: number
   customerId: string | null
   customerName: string
   customerEmail: string

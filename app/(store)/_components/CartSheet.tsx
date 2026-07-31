@@ -48,7 +48,10 @@ export function CartSheet() {
                 {items.map((item) => {
                   const unitPrice = item.salePrice ?? item.price
                   return (
-                    <div key={item.productId} className="flex gap-3 py-4">
+                    <div
+                      key={`${item.productId}:${item.variantId ?? ""}`}
+                      className="flex gap-3 py-4"
+                    >
                       <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
                         {item.image ? (
                           <Image
@@ -71,13 +74,18 @@ export function CartSheet() {
                           </p>
                           <button
                             type="button"
-                            onClick={() => removeItem(item.productId)}
+                            onClick={() => removeItem(item.productId, item.variantId)}
                             aria-label={`Remove ${item.name}`}
                             className="shrink-0 text-muted-foreground hover:text-destructive"
                           >
                             <Trash2Icon className="size-4" />
                           </button>
                         </div>
+                        {item.variantLabel && (
+                          <p className="text-xs text-muted-foreground">
+                            {item.variantLabel}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           ৳{unitPrice.toFixed(2)}
                         </p>
@@ -87,7 +95,7 @@ export function CartSheet() {
                             variant="outline"
                             size="icon-xs"
                             onClick={() =>
-                              setQuantity(item.productId, item.quantity - 1)
+                              setQuantity(item.productId, item.variantId, item.quantity - 1)
                             }
                             aria-label="Decrease quantity"
                           >
@@ -101,7 +109,7 @@ export function CartSheet() {
                             variant="outline"
                             size="icon-xs"
                             onClick={() =>
-                              setQuantity(item.productId, item.quantity + 1)
+                              setQuantity(item.productId, item.variantId, item.quantity + 1)
                             }
                             aria-label="Increase quantity"
                           >

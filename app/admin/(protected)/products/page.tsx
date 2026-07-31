@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -159,8 +160,18 @@ export default function ProductsPage() {
             href={`/admin/products/${row.original.id}/edit`}
             className="group flex items-center gap-3"
           >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <PackageIcon className="size-4 text-muted-foreground" />
+            <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+              {row.original.images[0]?.url ? (
+                <Image
+                  src={row.original.images[0].url}
+                  alt={row.original.name}
+                  fill
+                  sizes="36px"
+                  className="object-cover"
+                />
+              ) : (
+                <PackageIcon className="size-4 text-muted-foreground" />
+              )}
             </div>
             <span className="flex items-center gap-1.5 font-medium text-foreground group-hover:text-primary">
               {row.original.name}

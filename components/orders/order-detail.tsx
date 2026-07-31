@@ -37,6 +37,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
 import { useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
 import { ORDER_STATUS_STYLES, type Order, type OrderStatus } from "@/lib/types/order"
+import { formatOrderId } from "@/lib/orders/format-order-id"
 
 const STATUS_ITEMS: { label: string; value: OrderStatus; icon: React.ReactNode }[] = [
   { label: "Pending", value: "Pending", icon: <ClockIcon className="text-chart-3" /> },
@@ -89,8 +90,8 @@ export function OrderDetail({
             <ArrowLeftIcon data-icon="inline-start" />
             Back to orders
           </Button>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {order.id}
+          <h1 className="text-lg font-bold tracking-tight text-foreground">
+            {formatOrderId(order.orderNumber)}
           </h1>
           <p className="text-sm text-muted-foreground">
             Placed on {new Date(order.createdAt).toLocaleDateString()}

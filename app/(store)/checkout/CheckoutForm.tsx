@@ -17,6 +17,8 @@ import { DELIVERY_CHARGES, type DeliveryZone } from "@/lib/checkout/delivery"
 
 export interface CheckoutLineItem {
   productId: string
+  variantId: string | null
+  variantLabel: string | null
   name: string
   price: number
   salePrice: number | null
@@ -31,8 +33,8 @@ export function CheckoutForm({
   onOrderPlaced,
 }: {
   items: CheckoutLineItem[]
-  onQuantityChange: (productId: string, quantity: number) => void
-  onRemove?: (productId: string) => void
+  onQuantityChange: (productId: string, variantId: string | null, quantity: number) => void
+  onRemove?: (productId: string, variantId: string | null) => void
   onOrderPlaced?: () => void
 }) {
   const router = useRouter()
@@ -66,6 +68,7 @@ export function CheckoutForm({
       const { orderId } = await createOrderAction({
         items: items.map((item) => ({
           productId: item.productId,
+          variantId: item.variantId,
           quantity: item.quantity,
         })),
         name,
@@ -172,7 +175,10 @@ export function CheckoutForm({
             {items.map((item) => {
               const unitPrice = item.salePrice ?? item.price
               return (
-                <div key={item.productId} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <div
+                  key={`${item.productId}:${item.variantId ?? ""}`}
+                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                >
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
                     {item.image ? (
                       <Image
@@ -192,6 +198,11 @@ export function CheckoutForm({
                     <p className="line-clamp-2 text-sm font-medium text-foreground">
                       {item.name}
                     </p>
+                    {item.variantLabel && (
+                      <p className="text-xs text-muted-foreground">
+                        {item.variantLabel}
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground">
                       ৳{unitPrice.toFixed(2)}
                     </p>
@@ -202,7 +213,7 @@ export function CheckoutForm({
                       variant="outline"
                       size="icon-sm"
                       onClick={() =>
-                        onQuantityChange(item.productId, item.quantity - 1)
+                        onQuantityChange(item.productId, item.variantId, item.quantity - 1)
                       }
                       aria-label="Decrease quantity"
                     >
@@ -216,7 +227,7 @@ export function CheckoutForm({
                       variant="outline"
                       size="icon-sm"
                       onClick={() =>
-                        onQuantityChange(item.productId, item.quantity + 1)
+                        onQuantityChange(item.productId, item.variantId, item.quantity + 1)
                       }
                       aria-label="Increase quantity"
                     >
@@ -226,7 +237,7 @@ export function CheckoutForm({
                   {onRemove && (
                     <button
                       type="button"
-                      onClick={() => onRemove(item.productId)}
+                      onClick={() => onRemove(item.productId, item.variantId)}
                       aria-label={`Remove ${item.name}`}
                       className="shrink-0 text-muted-foreground hover:text-destructive"
                     >

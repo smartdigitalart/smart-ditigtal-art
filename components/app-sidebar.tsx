@@ -10,7 +10,6 @@ import {
   AwardIcon,
   UsersIcon,
   ShoppingCartIcon,
-  FileTextIcon,
   Settings2Icon,
 } from "lucide-react"
 
@@ -57,11 +56,6 @@ const navMain = [
     title: "Orders",
     url: "/admin/orders",
     icon: <ShoppingCartIcon />,
-  },
-  {
-    title: "Blogs",
-    url: "/admin/blogs",
-    icon: <FileTextIcon />,
   },
   {
     title: "Settings",

@@ -20,6 +20,8 @@ export function ProductPurchasePanel({
   salePrice,
   image,
   inStock,
+  variantId = null,
+  variantLabel = null,
 }: {
   productId: string
   name: string
@@ -27,17 +29,21 @@ export function ProductPurchasePanel({
   salePrice: number | null
   image: string | null
   inStock: boolean
+  variantId?: string | null
+  variantLabel?: string | null
 }) {
   const router = useRouter()
   const addItem = useCartStore((state) => state.addItem)
   const [quantity, setQuantity] = useState(1)
 
   const handleAddToCart = () => {
-    addItem({ productId, name, price, salePrice, image }, quantity)
+    addItem({ productId, name, price, salePrice, image, variantId, variantLabel }, quantity)
   }
 
   const handleBuyNow = () => {
-    router.push(`/checkout?productId=${productId}&qty=${quantity}`)
+    const params = new URLSearchParams({ productId, qty: String(quantity) })
+    if (variantId) params.set("variantId", variantId)
+    router.push(`/checkout?${params.toString()}`)
   }
 
   if (!inStock) {

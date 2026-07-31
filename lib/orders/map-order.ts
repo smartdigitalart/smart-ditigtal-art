@@ -8,6 +8,7 @@ export function mapOrder(
 ): Order {
   return {
     id: row.id as string,
+    orderNumber: Number(row.order_number),
     customerId: (row.customer_id as string | null) ?? null,
     customerName,
     customerEmail,

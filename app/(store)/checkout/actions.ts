@@ -5,6 +5,7 @@ import { DELIVERY_CHARGES, type DeliveryZone } from "@/lib/checkout/delivery"
 
 export interface CheckoutLineItem {
   productId: string
+  variantId: string | null
   quantity: number
 }
 
@@ -43,21 +44,50 @@ export async function createOrderAction(
 
   const productById = new Map(products.map((p) => [p.id, p]))
 
+  const variantIds = payload.items
+    .map((item) => item.variantId)
+    .filter((id): id is string => !!id)
+  const { data: variants } =
+    variantIds.length > 0
+      ? await supabase
+          .from("product_variants")
+          .select("id, product_id, label, price, sale_price, in_stock")
+          .in("id", variantIds)
+      : { data: [] }
+  const variantById = new Map((variants ?? []).map((v) => [v.id, v]))
+
   let subtotal = 0
   const orderItemRows = payload.items.map((item) => {
     const product = productById.get(item.productId)
     if (!product) {
       throw new Error("Product not found")
     }
-    if (product.status !== "ACTIVE" || !product.in_stock) {
+
+    const variant = item.variantId ? variantById.get(item.variantId) : null
+    if (item.variantId && (!variant || variant.product_id !== product.id)) {
+      throw new Error(`${product.name}: selected option is no longer available`)
+    }
+
+    if (variant) {
+      if (!variant.in_stock) {
+        throw new Error(`${product.name} (${variant.label}) is no longer available`)
+      }
+    } else if (product.status !== "ACTIVE" || !product.in_stock) {
       throw new Error(`${product.name} is no longer available`)
     }
-    const unitPrice =
-      product.sale_price !== null ? Number(product.sale_price) : Number(product.price)
+
+    const unitPrice = variant
+      ? variant.sale_price !== null
+        ? Number(variant.sale_price)
+        : Number(variant.price)
+      : product.sale_price !== null
+        ? Number(product.sale_price)
+        : Number(product.price)
+
     subtotal += unitPrice * item.quantity
     return {
       product_id: product.id,
-      product_name: product.name,
+      product_name: variant ? `${product.name} (${variant.label})` : product.name,
       quantity: item.quantity,
       price: unitPrice,
     }
