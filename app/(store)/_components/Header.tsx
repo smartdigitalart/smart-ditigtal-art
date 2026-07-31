@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
-import { LayoutDashboardIcon, LogOutIcon, ShoppingBagIcon, User, UserIcon } from "lucide-react";
+import { LayoutDashboardIcon, LogOutIcon, PackageIcon, ShoppingBagIcon, User, UserIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -102,6 +102,12 @@ export default function Header() {
                            <Link href="/profile">
                               <UserIcon />
                               Profile
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                           <Link href="/profile/orders">
+                              <PackageIcon />
+                              My Orders
                            </Link>
                         </DropdownMenuItem>
                         {isAdmin && (

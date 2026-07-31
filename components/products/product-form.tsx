@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { ArrowLeftIcon, Loader2, PlusIcon, XIcon } from "lucide-react"
@@ -68,6 +68,12 @@ export interface ProductFormValues {
 
 export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get("returnTo")
+  const redirectTarget =
+    returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : "/admin/products"
   const isEdit = !!product
   const createProduct = useCreateAdminProduct()
   const updateProduct = useUpdateAdminProduct()
@@ -170,7 +176,7 @@ export function ProductForm({ product }: { product?: Product }) {
       toast.success(isEdit ? "Product updated" : "Product created", {
         description: data.name,
       })
-      router.push("/admin/products")
+      router.push(redirectTarget)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save product")
     }

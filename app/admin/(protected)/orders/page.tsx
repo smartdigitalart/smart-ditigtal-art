@@ -45,7 +45,7 @@ import {
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
 import { useAdminOrders, useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
-import { type Order, type OrderStatus } from "@/lib/types/order"
+import { ORDER_STATUS_STYLES, type Order, type OrderStatus } from "@/lib/types/order"
 
 const STATUS_ITEMS = [
   { label: "All Status", value: "all" },
@@ -55,14 +55,6 @@ const STATUS_ITEMS = [
   { label: "Cancelled", value: "Cancelled" },
   { label: "Refunded", value: "Refunded" },
 ]
-
-const STATUS_STYLES: Record<OrderStatus, string> = {
-  Pending: "bg-chart-3/10 text-chart-3",
-  Processing: "bg-chart-1/10 text-chart-1",
-  Completed: "bg-chart-2/10 text-chart-2",
-  Cancelled: "bg-destructive/10 text-destructive",
-  Refunded: "bg-muted text-muted-foreground",
-}
 
 const BULK_STATUS_OPTIONS: { label: string; value: OrderStatus; icon: React.ReactNode }[] = [
   { label: "Pending", value: "Pending", icon: <ClockIcon className="text-chart-3" /> },
@@ -203,7 +195,7 @@ export default function OrdersPage() {
         cell: ({ row }) => (
           <Badge
             variant="outline"
-            className={`border-transparent ${STATUS_STYLES[row.original.status]}`}
+            className={`border-transparent ${ORDER_STATUS_STYLES[row.original.status]}`}
           >
             {row.original.status}
           </Badge>

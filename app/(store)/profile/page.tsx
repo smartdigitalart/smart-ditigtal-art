@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { Loader2, MailIcon } from "lucide-react"
+import { KeyRoundIcon, Loader2, MailIcon, PackageIcon } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -83,6 +84,23 @@ export default function ProfilePage() {
             Manage your account details.
           </p>
         </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Link
+          href="/profile/orders"
+          className="inline-flex flex-1 items-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <PackageIcon className="size-4" />
+          Order history
+        </Link>
+        <Link
+          href="/profile/security"
+          className="inline-flex flex-1 items-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <KeyRoundIcon className="size-4" />
+          Security
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>

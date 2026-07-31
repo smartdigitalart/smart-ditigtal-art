@@ -270,9 +270,10 @@ export default function ProductsPage() {
         cell: ({ row }) => {
           const actions: DataTableRowAction[] = [
             {
-              label: "View",
+              label: "Preview",
               icon: <EyeIcon />,
-              onClick: () => toast.info(`Viewing ${row.original.name}`),
+              onClick: () =>
+                window.open(`/products/${row.original.id}`, "_blank"),
             },
             {
               label: "Edit",

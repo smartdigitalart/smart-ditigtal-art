@@ -149,24 +149,48 @@ export function OrderDetail({
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Link
-                href={`/admin/customers/${order.customerId}/edit`}
-                className="group flex flex-col gap-1"
-              >
-                <span className="text-sm font-medium text-foreground group-hover:text-primary">
-                  {order.customerName}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {order.customerEmail}
-                </span>
-              </Link>
-            </CardContent>
-          </Card>
+          {viewer === "admin" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href={`/admin/customers/${order.customerId}/edit`}
+                  className="group flex flex-col gap-1"
+                >
+                  <span className="text-sm font-medium text-foreground group-hover:text-primary">
+                    {order.customerName}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {order.customerEmail}
+                  </span>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {(order.shippingAddress || order.deliveryZone) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-1">
+                {order.shippingAddress && (
+                  <span className="text-sm text-foreground">
+                    {order.shippingAddress}
+                  </span>
+                )}
+                {order.deliveryZone && (
+                  <span className="text-sm text-muted-foreground">
+                    {DELIVERY_ZONE_LABELS[order.deliveryZone] ?? order.deliveryZone}
+                    {order.deliveryCharge > 0 &&
+                      ` · Delivery ৳${order.deliveryCharge.toFixed(2)}`}
+                  </span>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -179,48 +203,50 @@ export function OrderDetail({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Order status</CardTitle>
-              <CardDescription>Update the fulfillment status.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="order-status">Status</FieldLabel>
-                  <Select
-                    value={status}
-                    onValueChange={(value) =>
-                      value && setStatus(value as OrderStatus)
-                    }
-                  >
-                    <SelectTrigger id="order-status" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {STATUS_ITEMS.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>
-                            {item.icon}
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </FieldGroup>
-            </CardContent>
-            <CardFooter className="justify-end border-t pt-4">
-              <Button
-                onClick={handleSave}
-                disabled={saving || status === savedStatus}
-              >
-                {saving && <Loader2 className="animate-spin" />}
-                Update status
-              </Button>
-            </CardFooter>
-          </Card>
+          {viewer === "admin" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Order status</CardTitle>
+                <CardDescription>Update the fulfillment status.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="order-status">Status</FieldLabel>
+                    <Select
+                      value={status}
+                      onValueChange={(value) =>
+                        value && setStatus(value as OrderStatus)
+                      }
+                    >
+                      <SelectTrigger id="order-status" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {STATUS_ITEMS.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.icon}
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </FieldGroup>
+              </CardContent>
+              <CardFooter className="justify-end border-t pt-4">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving || status === savedStatus}
+                >
+                  {saving && <Loader2 className="animate-spin" />}
+                  Update status
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
         </div>
       </div>
     </div>

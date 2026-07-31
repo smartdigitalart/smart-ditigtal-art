@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils"
 
 export interface FeaturedProduct {
   id: string
-  slug?: string
   name: string
   price: number
   salePrice: number | null

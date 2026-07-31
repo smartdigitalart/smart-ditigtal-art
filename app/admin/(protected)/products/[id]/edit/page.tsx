@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { notFound } from "next/navigation"
 
 import { ProductForm } from "@/components/products/product-form"
@@ -15,5 +16,9 @@ export default async function EditProductPage({
     notFound()
   }
 
-  return <ProductForm product={product} />
+  return (
+    <Suspense>
+      <ProductForm product={product} />
+    </Suspense>
+  )
 }
