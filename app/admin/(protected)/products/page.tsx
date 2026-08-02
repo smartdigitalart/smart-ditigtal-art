@@ -284,7 +284,7 @@ export default function ProductsPage() {
               label: "Preview",
               icon: <EyeIcon />,
               onClick: () =>
-                window.open(`/products/${row.original.id}`, "_blank"),
+                window.open(`/products/${row.original.slug}`, "_blank"),
             },
             {
               label: "Edit",

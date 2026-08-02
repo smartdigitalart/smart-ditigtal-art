@@ -6,7 +6,13 @@ import { PencilIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 
-export function AdminEditProductButton({ productId }: { productId: string }) {
+export function AdminEditProductButton({
+  productId,
+  productSlug,
+}: {
+  productId: string
+  productSlug: string
+}) {
   const { isAdmin } = useAuth()
 
   if (!isAdmin) {
@@ -17,7 +23,7 @@ export function AdminEditProductButton({ productId }: { productId: string }) {
     <Button variant="outline" size="sm" asChild>
       <Link
         href={`/admin/products/${productId}/edit?returnTo=${encodeURIComponent(
-          `/products/${productId}`
+          `/products/${productSlug}`
         )}`}
       >
         <PencilIcon data-icon="inline-start" />

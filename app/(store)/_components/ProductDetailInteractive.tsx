@@ -11,6 +11,7 @@ import { AdminEditProductButton } from "@/components/products/admin-edit-product
 
 export function ProductDetailInteractive({
   productId,
+  productSlug,
   name,
   brandName,
   shortDescription,
@@ -21,6 +22,7 @@ export function ProductDetailInteractive({
   variants,
 }: {
   productId: string
+  productSlug: string
   name: string
   brandName: string | null
   shortDescription: string
@@ -59,7 +61,7 @@ export function ProductDetailInteractive({
               {name}
             </h1>
           </div>
-          <AdminEditProductButton productId={productId} />
+          <AdminEditProductButton productId={productId} productSlug={productSlug} />
         </div>
 
         {shortDescription && (

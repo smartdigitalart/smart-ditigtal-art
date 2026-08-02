@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { getProductByIdAction } from "@/app/admin/(protected)/products/actions"
+import { getProductBySlugAction } from "@/app/admin/(protected)/products/actions"
 import { getCategoryByIdAction } from "@/app/admin/(protected)/categories/actions"
 import { getBrandByIdAction } from "@/app/admin/(protected)/brands/actions"
 import { ProductDetailInteractive } from "@/app/(store)/_components/ProductDetailInteractive"
@@ -10,10 +10,10 @@ import { RelatedProducts } from "@/app/(store)/_components/RelatedProducts"
 export default async function ProductDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
-  const product = await getProductByIdAction(id)
+  const { slug } = await params
+  const product = await getProductBySlugAction(slug)
 
   if (!product || product.status !== "ACTIVE") {
     notFound()
@@ -49,6 +49,7 @@ export default async function ProductDetailPage({
         <div className="grid gap-8 lg:grid-cols-2">
           <ProductDetailInteractive
             productId={product.id}
+            productSlug={product.slug}
             name={product.name}
             brandName={brand?.name ?? null}
             shortDescription={product.shortDescription}

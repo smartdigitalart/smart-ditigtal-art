@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 
 export interface FeaturedProduct {
   id: string
+  slug: string
   name: string
   price: number
   salePrice: number | null
@@ -17,7 +18,7 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
   const hasSale = product.salePrice != null && product.salePrice < product.price
 
   return (
-    <Link href={`/products/${product.id}`} className="group flex flex-col gap-3">
+    <Link href={`/products/${product.slug}`} className="group flex flex-col gap-3">
       <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
         {product.image ? (
           <>

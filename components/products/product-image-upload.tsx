@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { backendAssetUrl } from "@/lib/backend-url"
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
 export interface ProductImage {
   id: string
   url: string
@@ -37,10 +39,17 @@ export function ProductImageUpload({
   const handleFiles = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return
 
+    const files = Array.from(fileList)
+    const oversized = files.find((file) => file.size > MAX_IMAGE_BYTES)
+    if (oversized) {
+      toast.error(`"${oversized.name}" is over 10MB. Please choose a smaller image.`)
+      return
+    }
+
     setUploading(true)
     try {
       const uploaded = await Promise.all(
-        Array.from(fileList).map(async (file) => {
+        files.map(async (file) => {
           const formData = new FormData()
           formData.append("productId", productId)
           formData.append("file", file)
@@ -159,8 +168,9 @@ export function ProductImageUpload({
       />
 
       <p className="text-xs text-muted-foreground">
-        Upload multiple images. The first image is used as the cover — hover
-        any other image and click the star to make it the cover.
+        Upload multiple images, up to 10MB each. The first image is used as
+        the cover — hover any other image and click the star to make it the
+        cover.
       </p>
     </div>
   )

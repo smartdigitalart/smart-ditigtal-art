@@ -87,12 +87,49 @@ export async function getProductByIdAction(id: string): Promise<Product | null> 
   return mapProduct(data, (variantRows ?? []).map(mapVariant))
 }
 
+export async function getProductBySlugAction(slug: string): Promise<Product | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle()
+  if (error || !data) return null
+
+  const { data: variantRows } = await supabase
+    .from("product_variants")
+    .select("*")
+    .eq("product_id", data.id)
+    .order("sort_order", { ascending: true })
+
+  return mapProduct(data, (variantRows ?? []).map(mapVariant))
+}
+
 function slugFromName(name: string) {
   return name
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
+}
+
+async function generateUniqueSlug(
+  supabase: ReturnType<typeof createAdminClient>,
+  name: string,
+  excludeId?: string
+): Promise<string> {
+  const base = slugFromName(name)
+  let slug = base
+  let attempt = 2
+
+  for (;;) {
+    let query = supabase.from("products").select("id").eq("slug", slug)
+    if (excludeId) query = query.neq("id", excludeId)
+    const { data } = await query.maybeSingle()
+    if (!data) return slug
+    slug = `${base}-${attempt}`
+    attempt += 1
+  }
 }
 
 async function replaceVariants(
@@ -122,12 +159,13 @@ export async function createProductAction(
 ): Promise<Product> {
   await requireAdminProfile()
   const supabase = createAdminClient()
+  const slug = await generateUniqueSlug(supabase, payload.name)
   const { data, error } = await supabase
     .from("products")
     .insert({
       id: payload.id,
       name: payload.name,
-      slug: `${slugFromName(payload.name)}-${(payload.id ?? crypto.randomUUID()).slice(0, 8)}`,
+      slug,
       category_id: payload.categoryId,
       brand_id: payload.brandId,
       price: payload.price,

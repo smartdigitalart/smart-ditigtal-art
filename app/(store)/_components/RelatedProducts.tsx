@@ -8,7 +8,7 @@ async function getRelatedProducts(
   const supabase = await createClient()
   const { data } = await supabase
     .from("products")
-    .select("id, name, price, sale_price, images")
+    .select("id, slug, name, price, sale_price, images")
     .eq("category_id", categoryId)
     .eq("status", "ACTIVE")
     .neq("id", excludeProductId)
@@ -19,6 +19,7 @@ async function getRelatedProducts(
     const images = row.images as { id: string; url: string }[] | null
     return {
       id: row.id as string,
+      slug: row.slug as string,
       name: row.name as string,
       price: Number(row.price),
       salePrice: row.sale_price !== null ? Number(row.sale_price) : null,

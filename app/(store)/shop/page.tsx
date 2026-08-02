@@ -53,7 +53,7 @@ async function getProducts(
   const supabase = await createClient()
   let query = supabase
     .from("products")
-    .select("id, name, price, sale_price, images")
+    .select("id, slug, name, price, sale_price, images")
     .eq("status", "ACTIVE")
 
   const q = (params.q ?? "").trim()
@@ -93,6 +93,7 @@ async function getProducts(
     const images = row.images as { id: string; url: string }[] | null
     return {
       id: row.id as string,
+      slug: row.slug as string,
       name: row.name as string,
       price: Number(row.price),
       salePrice: row.sale_price !== null ? Number(row.sale_price) : null,

@@ -4,6 +4,8 @@ export type ImageUploadResult =
   | { url: string; error?: never }
   | { error: string; url?: never }
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
 export async function uploadImageToMediaBucket(
   formData: FormData,
   idField: string,
@@ -22,6 +24,10 @@ export async function uploadImageToMediaBucket(
 
   if (!file.type.startsWith("image/")) {
     return { error: "Please upload a valid image file." }
+  }
+
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { error: "Image must be 10MB or smaller." }
   }
 
   const supabase = await createClient()

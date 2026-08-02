@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { backendAssetUrl } from "@/lib/backend-url"
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
 export function SingleImageUpload({
   value,
   onChange,
@@ -38,6 +40,11 @@ export function SingleImageUpload({
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image must be 10MB or smaller.")
+      return
+    }
 
     if (!uploadAction) {
       onChange(URL.createObjectURL(file))
@@ -134,7 +141,7 @@ export function SingleImageUpload({
         >
           {value ? "Change image" : label}
         </Button>
-        <p className="text-xs text-muted-foreground">PNG or JPG, up to 2MB.</p>
+        <p className="text-xs text-muted-foreground">PNG or JPG, up to 10MB.</p>
       </div>
 
       <input
