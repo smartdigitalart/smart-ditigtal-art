@@ -197,6 +197,7 @@ export function BrandForm({ brand }: { brand?: Brand }) {
                   placeholder="Describe this brand..."
                   minHeight="min-h-40"
                   toolbar="full"
+                  imageUploadAction={uploadLogo}
                 />
               </CardContent>
             </Card>

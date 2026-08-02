@@ -1,7 +1,8 @@
 "use client"
 
-import { forwardRef, useState } from "react"
+import { forwardRef, useRef, useState } from "react"
 import type { Editor } from "@tiptap/react"
+import { toast } from "sonner"
 import {
   BoldIcon,
   ItalicIcon,
@@ -31,6 +32,7 @@ import {
   PaletteIcon,
   RemoveFormattingIcon,
   CodeSquareIcon,
+  Loader2Icon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -41,7 +43,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
+
+export type EditorImageUploadAction = (
+  formData: FormData
+) => Promise<{ url: string } | { error: string }>
 
 const TEXT_COLORS = [
   "#0b0b0b",
@@ -135,9 +142,63 @@ function LinkButton({ editor }: { editor: Editor }) {
   )
 }
 
-function ImageButton({ editor }: { editor: Editor }) {
+function ImageButton({
+  editor,
+  uploadAction,
+}: {
+  editor: Editor
+  uploadAction?: EditorImageUploadAction
+}) {
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const insertImage = (src: string) => {
+    editor.chain().focus().setImage({ src }).run()
+    setUrl("")
+    setOpen(false)
+  }
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file || !uploadAction) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const result = await uploadAction(formData)
+      if ("error" in result) {
+        toast.error(result.error)
+        return
+      }
+      insertImage(result.url)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload image")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const urlForm = (
+    <form
+      className="flex items-center gap-2"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (url) insertImage(url)
+      }}
+    >
+      <Input
+        autoFocus
+        placeholder="Image URL"
+        value={url}
+        onChange={(event) => setUrl(event.target.value)}
+        className="h-8"
+      />
+      <Button type="submit" size="sm">
+        Add
+      </Button>
+    </form>
+  )
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -146,29 +207,43 @@ function ImageButton({ editor }: { editor: Editor }) {
           <ImageIcon />
         </ToolbarButton>
       </PopoverTrigger>
-      <PopoverContent className="w-64" align="start">
-        <form
-          className="flex items-center gap-2"
-          onSubmit={(event) => {
-            event.preventDefault()
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run()
-            }
-            setUrl("")
-            setOpen(false)
-          }}
-        >
-          <Input
-            autoFocus
-            placeholder="Image URL"
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            className="h-8"
-          />
-          <Button type="submit" size="sm">
-            Add
-          </Button>
-        </form>
+      <PopoverContent className="w-72" align="start">
+        {uploadAction ? (
+          <Tabs defaultValue="upload">
+            <TabsList className="w-full">
+              <TabsTrigger value="upload">Upload</TabsTrigger>
+              <TabsTrigger value="url">URL</TabsTrigger>
+            </TabsList>
+            <TabsContent value="upload" className="mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading && <Loader2Icon className="animate-spin" />}
+                {uploading ? "Uploading..." : "Choose image"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => {
+                  void handleFile(event.target.files?.[0])
+                  event.target.value = ""
+                }}
+              />
+            </TabsContent>
+            <TabsContent value="url" className="mt-2">
+              {urlForm}
+            </TabsContent>
+          </Tabs>
+        ) : (
+          urlForm
+        )}
       </PopoverContent>
     </Popover>
   )
@@ -210,9 +285,11 @@ function ColorButton({ editor }: { editor: Editor }) {
 export function EditorToolbar({
   editor,
   variant = "full",
+  imageUploadAction,
 }: {
   editor: Editor | null
   variant?: "full" | "minimal"
+  imageUploadAction?: EditorImageUploadAction
 }) {
   if (!editor) return null
 
@@ -396,7 +473,7 @@ export function EditorToolbar({
 
           <Separator orientation="vertical" className="mx-1 h-5" />
 
-          <ImageButton editor={editor} />
+          <ImageButton editor={editor} uploadAction={imageUploadAction} />
           <ToolbarButton
             label="Insert table"
             onClick={() =>

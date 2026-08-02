@@ -17,7 +17,10 @@ import { TaskItem } from "@tiptap/extension-task-item"
 import { Typography } from "@tiptap/extension-typography"
 import { CharacterCount } from "@tiptap/extension-character-count"
 
-import { EditorToolbar } from "@/components/tiptap/editor-toolbar"
+import {
+  EditorToolbar,
+  type EditorImageUploadAction,
+} from "@/components/tiptap/editor-toolbar"
 import { cn } from "@/lib/utils"
 
 export function RichTextEditor({
@@ -28,6 +31,7 @@ export function RichTextEditor({
   toolbar = "full",
   characterLimit,
   className,
+  imageUploadAction,
 }: {
   value: string
   onChange: (html: string) => void
@@ -36,6 +40,7 @@ export function RichTextEditor({
   toolbar?: "full" | "minimal"
   characterLimit?: number
   className?: string
+  imageUploadAction?: EditorImageUploadAction
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -89,7 +94,11 @@ export function RichTextEditor({
         className
       )}
     >
-      <EditorToolbar editor={editor} variant={toolbar} />
+      <EditorToolbar
+        editor={editor}
+        variant={toolbar}
+        imageUploadAction={imageUploadAction}
+      />
       <EditorContent editor={editor} />
       {editor && characterLimit && (
         <div className="sticky bottom-0 border-t border-border bg-background px-3 py-1.5 text-right text-xs text-muted-foreground">

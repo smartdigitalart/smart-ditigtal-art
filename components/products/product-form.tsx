@@ -409,6 +409,7 @@ export function ProductForm({ product }: { product?: Product }) {
                   placeholder="Write a detailed description..."
                   minHeight="min-h-56"
                   toolbar="full"
+                  imageUploadAction={uploadVariantImage}
                 />
               </CardContent>
             </Card>

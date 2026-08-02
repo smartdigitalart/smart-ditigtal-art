@@ -66,6 +66,14 @@ export function CategoryForm({ category }: { category?: Category }) {
 
   const [categoryId] = useState(() => category?.id ?? crypto.randomUUID())
 
+  const uploadDescriptionImage = (formData: FormData) => {
+    const file = formData.get("file")
+    const payload = new FormData()
+    payload.append("categoryId", categoryId)
+    if (file) payload.append("file", file)
+    return uploadCategoryImageAction(payload)
+  }
+
   const allCategories = (data?.items ?? []).filter(
     (c) => c.id !== category?.id
   )
@@ -192,6 +200,7 @@ export function CategoryForm({ category }: { category?: Category }) {
                   placeholder="Describe this category..."
                   minHeight="min-h-40"
                   toolbar="full"
+                  imageUploadAction={uploadDescriptionImage}
                 />
               </CardContent>
             </Card>

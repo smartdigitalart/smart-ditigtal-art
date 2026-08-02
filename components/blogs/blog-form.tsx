@@ -64,6 +64,14 @@ export function BlogForm({ blog }: { blog?: Blog }) {
   // uploads/blogs/{id} folder before the post itself has been saved.
   const [blogId] = useState(() => blog?.id ?? crypto.randomUUID())
 
+  const uploadContentImage = (formData: FormData) => {
+    const file = formData.get("file")
+    const payload = new FormData()
+    payload.append("blogId", blogId)
+    if (file) payload.append("file", file)
+    return uploadBlogImageAction(payload)
+  }
+
   const {
     register,
     handleSubmit,
@@ -219,6 +227,7 @@ export function BlogForm({ blog }: { blog?: Blog }) {
                   placeholder="Write the post content..."
                   minHeight="min-h-60"
                   toolbar="full"
+                  imageUploadAction={uploadContentImage}
                 />
               </CardContent>
             </Card>
