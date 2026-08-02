@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { PackageIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Lens } from "@/components/ui/lens"
 
 export interface FeaturedProduct {
   id: string
@@ -21,7 +22,7 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
     <Link href={`/products/${product.slug}`} className="group flex flex-col gap-3">
       <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
         {product.image ? (
-          <>
+          <Lens zoomFactor={1.8} lensSize={110} className="absolute inset-0">
             <Image
               src={product.image}
               alt={product.name}
@@ -41,7 +42,7 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
                 className="object-cover opacity-0 transition-all duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
               />
             )}
-          </>
+          </Lens>
         ) : (
           <div className="flex size-full items-center justify-center text-muted-foreground">
             <PackageIcon className="size-8" />

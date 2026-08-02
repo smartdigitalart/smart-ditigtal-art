@@ -38,7 +38,12 @@ export async function CategoryProductsRow() {
     getProductsForRootCategory("Perfume", 2),
   ])
 
-  const products = [...paintingProducts, ...perfumeProducts]
+  const products: FeaturedProduct[] = []
+  const maxLen = Math.max(paintingProducts.length, perfumeProducts.length)
+  for (let i = 0; i < maxLen; i++) {
+    if (paintingProducts[i]) products.push(paintingProducts[i])
+    if (perfumeProducts[i]) products.push(perfumeProducts[i])
+  }
 
   if (products.length === 0) return null
 

@@ -39,14 +39,23 @@ export function ProductDetailInteractive({
   const selectedVariant =
     variants.find((variant) => variant.id === selectedVariantId) ?? null
 
-  const galleryImages = selectedVariant?.image
-    ? [{ id: `variant-${selectedVariant.id}`, url: selectedVariant.image }, ...images]
-    : images
+  const variantImages = variants
+    .filter((variant) => variant.image)
+    .map((variant) => ({ id: `variant-${variant.id}`, url: variant.image! }))
+  const galleryImages = [...variantImages, ...images]
+
+  const focusImageId = selectedVariant?.image
+    ? `variant-${selectedVariant.id}`
+    : (images[0]?.id ?? null)
 
   return (
     <>
       <div>
-        <ProductGallery images={galleryImages} name={name} />
+        <ProductGallery
+          images={galleryImages}
+          name={name}
+          focusImageId={focusImageId}
+        />
       </div>
 
       <div className="flex flex-col gap-5">

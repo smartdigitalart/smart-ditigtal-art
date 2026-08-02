@@ -11,13 +11,16 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 import { ProductImagePreview } from "@/app/(store)/_components/ProductImagePreview"
+import { Lens } from "@/components/ui/lens"
 
 export function ProductGallery({
   images,
   name,
+  focusImageId,
 }: {
   images: { id: string; url: string }[]
   name: string
+  focusImageId?: string | null
 }) {
   const [api, setApi] = useState<CarouselApi>()
   const [activeIndex, setActiveIndex] = useState(0)
@@ -28,6 +31,12 @@ export function ProductGallery({
     setActiveIndex(api.selectedScrollSnap())
     api.on("select", () => setActiveIndex(api.selectedScrollSnap()))
   }, [api])
+
+  useEffect(() => {
+    if (!api || !focusImageId) return
+    const index = images.findIndex((image) => image.id === focusImageId)
+    if (index >= 0) api.scrollTo(index)
+  }, [api, focusImageId, images])
 
   if (images.length === 0) {
     return (
@@ -72,21 +81,30 @@ export function ProductGallery({
         <CarouselContent>
           {images.map((image) => (
             <CarouselItem key={image.id}>
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setPreviewOpen(true)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault()
+                    setPreviewOpen(true)
+                  }
+                }}
                 className="relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-muted"
                 aria-label="View full image"
               >
-                <Image
-                  src={image.url}
-                  alt={name}
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  priority
-                  className="object-cover"
-                />
-              </button>
+                <Lens zoomFactor={1.8} lensSize={150} className="absolute inset-0">
+                  <Image
+                    src={image.url}
+                    alt={name}
+                    fill
+                    sizes="(min-width: 1024px) 40vw, 100vw"
+                    priority
+                    className="object-cover"
+                  />
+                </Lens>
+              </div>
             </CarouselItem>
           ))}
         </CarouselContent>
