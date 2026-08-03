@@ -32,20 +32,33 @@ async function getProductsForRootCategory(
   })
 }
 
+// Literal classes (not built via template strings) so Tailwind's scanner picks them up.
+const LG_ORDER_CLASSES = ["lg:order-1", "lg:order-2", "lg:order-3", "lg:order-4"]
+
 export async function CategoryProductsRow() {
   const [paintingProducts, perfumeProducts] = await Promise.all([
     getProductsForRootCategory("Painting", 2),
     getProductsForRootCategory("Perfume", 2),
   ])
 
-  const products: FeaturedProduct[] = []
+  // DOM order interleaves art/perfume so the base (mobile/tablet) 2-column
+  // grid reads art, perfume, art, perfume per row. At the lg breakpoint,
+  // where all 4 fit in a single row, lgOrder groups art first then perfume.
   const maxLen = Math.max(paintingProducts.length, perfumeProducts.length)
+  const items: { product: FeaturedProduct; lgOrder: number }[] = []
   for (let i = 0; i < maxLen; i++) {
-    if (paintingProducts[i]) products.push(paintingProducts[i])
-    if (perfumeProducts[i]) products.push(perfumeProducts[i])
+    if (paintingProducts[i]) {
+      items.push({ product: paintingProducts[i], lgOrder: i + 1 })
+    }
+    if (perfumeProducts[i]) {
+      items.push({
+        product: perfumeProducts[i],
+        lgOrder: paintingProducts.length + i + 1,
+      })
+    }
   }
 
-  if (products.length === 0) return null
+  if (items.length === 0) return null
 
   return (
     <section className="w-full py-8">
@@ -54,8 +67,10 @@ export async function CategoryProductsRow() {
           Products
         </h2>
         <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {items.map(({ product, lgOrder }) => (
+            <div key={product.id} className={LG_ORDER_CLASSES[lgOrder - 1]}>
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       </div>
