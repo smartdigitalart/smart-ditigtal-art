@@ -158,7 +158,7 @@ export default function ProductsPage() {
         cell: ({ row }) => (
           <Link
             href={`/admin/products/${row.original.id}/edit`}
-            className="group flex items-center gap-3"
+            className="group flex min-w-0 items-center gap-3"
           >
             <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
               {row.original.images[0]?.url ? (
@@ -173,10 +173,13 @@ export default function ProductsPage() {
                 <PackageIcon className="size-4 text-muted-foreground" />
               )}
             </div>
-            <span className="flex items-center gap-1.5 font-medium text-foreground group-hover:text-primary">
-              {row.original.name}
+            <span
+              title={row.original.name}
+              className="flex min-w-0 max-w-[240px] items-center gap-1.5 font-medium text-foreground group-hover:text-primary"
+            >
+              <span className="truncate">{row.original.name}</span>
               {row.original.featured && (
-                <StarIcon className="size-3.5 fill-chart-3 text-chart-3" />
+                <StarIcon className="size-3.5 shrink-0 fill-chart-3 text-chart-3" />
               )}
             </span>
           </Link>

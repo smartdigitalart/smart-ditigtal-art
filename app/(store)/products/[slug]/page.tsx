@@ -6,6 +6,7 @@ import { getCategoryByIdAction } from "@/app/admin/(protected)/categories/action
 import { getBrandByIdAction } from "@/app/admin/(protected)/brands/actions"
 import { ProductDetailInteractive } from "@/app/(store)/_components/ProductDetailInteractive"
 import { RelatedProducts } from "@/app/(store)/_components/RelatedProducts"
+import { ExpandableDescription } from "@/app/(store)/_components/ExpandableDescription"
 
 export default async function ProductDetailPage({
   params,
@@ -66,10 +67,7 @@ export default async function ProductDetailPage({
             <h2 className="mb-3 text-lg font-semibold text-foreground">
               Description
             </h2>
-            <div
-              className="prose prose-sm max-w-none text-foreground"
-              dangerouslySetInnerHTML={{ __html: product.description }}
-            />
+            <ExpandableDescription html={product.description} />
           </div>
         )}
       </div>
