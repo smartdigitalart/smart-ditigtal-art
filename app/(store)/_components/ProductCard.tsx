@@ -22,7 +22,7 @@ export function ProductCard({ product }: { product: FeaturedProduct }) {
     <Link href={`/products/${product.slug}`} className="group flex flex-col gap-3">
       <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
         {product.image ? (
-          <Lens zoomFactor={1.8} lensSize={110} className="absolute inset-0">
+          <Lens zoomFactor={1.8} lensSize={140} className="absolute inset-0">
             <Image
               src={product.image}
               alt={product.name}

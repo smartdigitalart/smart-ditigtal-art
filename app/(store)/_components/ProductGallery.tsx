@@ -94,7 +94,7 @@ export function ProductGallery({
                 className="relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-muted"
                 aria-label="View full image"
               >
-                <Lens zoomFactor={1.8} lensSize={150} className="absolute inset-0">
+                <Lens zoomFactor={1.8} lensSize={190} className="absolute inset-0">
                   <Image
                     src={image.url}
                     alt={name}

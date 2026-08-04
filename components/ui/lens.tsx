@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useCallback, useMemo, useRef, useState } from "react"
-import { AnimatePresence, motion, useMotionTemplate } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
@@ -27,8 +27,6 @@ interface LensProps {
   isStatic?: boolean
   /** The duration of the animation */
   duration?: number
-  /** The color of the lens */
-  lensColor?: string
   /** The aria label of the lens */
   ariaLabel?: string
   /** Additional class names for the outer wrapper */
@@ -43,7 +41,6 @@ export function Lens({
   position = { x: 0, y: 0 },
   defaultPosition,
   duration = 0.1,
-  lensColor = "black",
   ariaLabel = "Zoom Area",
   className,
 }: LensProps) {
@@ -76,14 +73,12 @@ export function Lens({
     if (e.key === "Escape") setIsHovering(false)
   }, [])
 
-  const maskImage = useMotionTemplate`radial-gradient(circle ${
-    lensSize / 2
-  }px at ${currentPosition.x}px ${
-    currentPosition.y
-  }px, ${lensColor} 100%, transparent 100%)`
-
   const LensContent = useMemo(() => {
     const { x, y } = currentPosition
+    const half = lensSize / 2
+    const polygon = `polygon(${x - half}px ${y - half}px, ${x + half}px ${
+      y - half
+    }px, ${x + half}px ${y + half}px, ${x - half}px ${y + half}px)`
 
     return (
       <motion.div
@@ -93,8 +88,8 @@ export function Lens({
         transition={{ duration }}
         className="absolute inset-0 overflow-hidden"
         style={{
-          maskImage,
-          WebkitMaskImage: maskImage,
+          clipPath: polygon,
+          WebkitClipPath: polygon,
           transformOrigin: `${x}px ${y}px`,
           zIndex: 50,
         }}
@@ -110,7 +105,7 @@ export function Lens({
         </div>
       </motion.div>
     )
-  }, [currentPosition, maskImage, zoomFactor, children, duration])
+  }, [currentPosition, lensSize, zoomFactor, children, duration])
 
   return (
     <div
