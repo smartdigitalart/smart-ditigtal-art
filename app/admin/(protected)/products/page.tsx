@@ -10,6 +10,7 @@ import {
   PackageIcon,
   PencilIcon,
   PlusIcon,
+  SparklesIcon,
   StarIcon,
   Trash2Icon,
   TriangleAlertIcon,
@@ -37,7 +38,11 @@ import {
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
 import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
-import { useAdminProducts, useDeleteAdminProduct } from "@/lib/api/use-admin-products"
+import {
+  useAdminProducts,
+  useCleanupOrphanedProductStorage,
+  useDeleteAdminProduct,
+} from "@/lib/api/use-admin-products"
 import { useAdminBrands } from "@/lib/api/use-admin-brands"
 import { useAdminCategories } from "@/lib/api/use-admin-categories"
 import type { Product } from "@/lib/types/product"
@@ -63,6 +68,7 @@ export default function ProductsPage() {
   const { data: categoriesData } = useAdminCategories()
   const { data: brandsData } = useAdminBrands()
   const deleteProduct = useDeleteAdminProduct()
+  const cleanupStorage = useCleanupOrphanedProductStorage()
   const products = productsData?.items ?? []
   const categories = categoriesData?.items ?? []
   const brands = brandsData?.items ?? []
@@ -135,6 +141,19 @@ export default function ProductsPage() {
       `Deleted ${selectedCount} product${selectedCount > 1 ? "s" : ""}`
     )
     setRowSelection({})
+  }
+
+  const handleCleanupStorage = async () => {
+    try {
+      const result = await cleanupStorage.mutateAsync()
+      toast.success(
+        result.filesRemoved > 0
+          ? `Removed ${result.filesRemoved} unused image${result.filesRemoved > 1 ? "s" : ""} from storage`
+          : "No unused images found — storage is already clean"
+      )
+    } catch {
+      toast.error("Failed to clean up storage")
+    }
   }
 
   const stats = useMemo(
@@ -325,12 +344,22 @@ export default function ProductsPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Products
         </h1>
-        <Button asChild>
-          <Link href="/admin/products/add">
-            <PlusIcon data-icon="inline-start" />
-            Add Product
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleCleanupStorage}
+            disabled={cleanupStorage.isPending}
+          >
+            <SparklesIcon data-icon="inline-start" />
+            {cleanupStorage.isPending ? "Cleaning up…" : "Clean up storage"}
+          </Button>
+          <Button asChild>
+            <Link href="/admin/products/add">
+              <PlusIcon data-icon="inline-start" />
+              Add Product
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <StatCardGrid>

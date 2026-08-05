@@ -5,6 +5,10 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdminProfile } from "@/lib/supabase/require-admin"
 import { extractStoragePath } from "@/lib/supabase/storage-path"
 import {
+  listSubfolders,
+  pruneStorageFolder,
+} from "@/lib/supabase/prune-storage"
+import {
   uploadImageToMediaBucket,
   type ImageUploadResult,
 } from "@/lib/supabase/upload-image"
@@ -212,6 +216,13 @@ export async function updateProductAction(
   if (error) throw error
 
   await replaceVariants(supabase, id, payload.variants)
+
+  const activeUrls = [
+    ...payload.images.map((image) => image.url),
+    ...payload.variants.map((variant) => variant.image),
+  ]
+  await pruneStorageFolder(supabase, "media", `products/${id}`, activeUrls)
+
   return mapProduct(data, payload.variants)
 }
 
@@ -220,6 +231,66 @@ export async function deleteProductAction(id: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from("products").delete().eq("id", id)
   if (error) throw error
+
+  await pruneStorageFolder(supabase, "media", `products/${id}`, [])
+}
+
+export interface StorageCleanupResult {
+  foldersScanned: number
+  filesRemoved: number
+}
+
+/**
+ * One-off/on-demand sweep across every product's storage folder: removes
+ * files no longer referenced by the product's images or variants, and wipes
+ * folders left behind by products deleted before this cleanup existed.
+ */
+export async function cleanupOrphanedProductStorageAction(): Promise<StorageCleanupResult> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("id, images")
+  if (error) throw error
+
+  const { data: variantRows, error: variantsError } = await supabase
+    .from("product_variants")
+    .select("product_id, image")
+  if (variantsError) throw variantsError
+
+  const activeUrlsByProduct = new Map<string, string[]>()
+  for (const product of products ?? []) {
+    const images = (product.images as { url: string }[] | null) ?? []
+    activeUrlsByProduct.set(
+      product.id as string,
+      images.map((image) => image.url)
+    )
+  }
+  for (const variant of variantRows ?? []) {
+    const productId = variant.product_id as string
+    if (!variant.image) continue
+    const list = activeUrlsByProduct.get(productId) ?? []
+    list.push(variant.image as string)
+    activeUrlsByProduct.set(productId, list)
+  }
+
+  const folderIds = await listSubfolders(supabase, "media", "products")
+  const knownFolderIds = new Set(activeUrlsByProduct.keys())
+  const allFolderIds = new Set([...folderIds, ...knownFolderIds])
+
+  let filesRemoved = 0
+  for (const folderId of allFolderIds) {
+    const removed = await pruneStorageFolder(
+      supabase,
+      "media",
+      `products/${folderId}`,
+      activeUrlsByProduct.get(folderId) ?? []
+    )
+    filesRemoved += removed.length
+  }
+
+  return { foldersScanned: allFolderIds.size, filesRemoved }
 }
 
 export async function uploadProductImageAction(

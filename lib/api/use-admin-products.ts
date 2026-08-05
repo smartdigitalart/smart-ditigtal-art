@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  cleanupOrphanedProductStorageAction,
   createProductAction,
   deleteProductAction,
   listProductsAction,
@@ -47,5 +48,11 @@ export function useDeleteAdminProduct() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: KEY })
     },
+  })
+}
+
+export function useCleanupOrphanedProductStorage() {
+  return useMutation({
+    mutationFn: () => cleanupOrphanedProductStorageAction(),
   })
 }
