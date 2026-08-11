@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
+import type { SiteSocialLinks } from "@/lib/types/site-settings";
 
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
    <svg viewBox="0 0 24 24" fill="#1877F2" {...props}>
@@ -43,20 +44,27 @@ const MessengerIcon = (props: React.SVGProps<SVGSVGElement>) => (
    </svg>
 );
 
-const socialLinks = [
-   { name: "Facebook", href: "https://facebook.com/", Icon: FacebookIcon },
-   { name: "Instagram", href: "https://instagram.com/", Icon: InstagramIcon },
-   { name: "Messenger", href: "https://m.me/", Icon: MessengerIcon },
-   { name: "Email", href: "mailto:info@smartdigitalartbd.com", Icon: Mail },
-];
-
 const shopLinks = [
    { label: "Art", href: "/shop?category=painting" },
    { label: "Perfume", href: "/shop?category=perfume" },
    { label: "All products", href: "/shop" },
 ];
 
-const Footer = () => {
+const Footer = ({ socialLinks }: { socialLinks: SiteSocialLinks }) => {
+   const emailHref = socialLinks.email
+      ? `mailto:${socialLinks.email}`
+      : "mailto:info@smartdigitalartbd.com";
+   const links = [
+      { name: "Facebook", href: socialLinks.facebook, Icon: FacebookIcon },
+      { name: "Instagram", href: socialLinks.instagram, Icon: InstagramIcon },
+      { name: "Messenger", href: socialLinks.messenger, Icon: MessengerIcon },
+      {
+         name: "Email",
+         href: emailHref,
+         Icon: Mail,
+      },
+   ].filter((link) => link.href);
+
    return (
       <footer className="mt-auto w-full border-t border-border bg-muted/30">
          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-4 py-12 sm:px-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
@@ -73,7 +81,7 @@ const Footer = () => {
                   care, delivered across Bangladesh.
                </p>
                <div className="flex items-center gap-3">
-                  {socialLinks.map(({ name, href, Icon }) => (
+                  {links.map(({ name, href, Icon }) => (
                      <a
                         key={name}
                         href={href}
@@ -129,11 +137,11 @@ const Footer = () => {
             <div className="flex flex-col gap-3">
                <h3 className="text-sm font-semibold text-foreground">Contact</h3>
                <a
-                  href="mailto:info@smartdigitalartbd.com"
+                  href={emailHref}
                   className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                >
                   <Mail className="size-4" />
-                  info@smartdigitalartbd.com
+                  {socialLinks.email || "info@smartdigitalartbd.com"}
                </a>
             </div>
          </div>

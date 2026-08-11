@@ -9,20 +9,21 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
+import type { HeroBanner } from "@/lib/types/site-settings"
 
-const banners = [
-  { id: "banner-1", src: "/banner-1.jpeg", alt: "Smart Digital Art banner 1" },
-  { id: "banner-2", src: "/banner-2.jpeg", alt: "Smart Digital Art banner 2" },
-]
-
-export function Hero() {
+export function Hero({ banners }: { banners: HeroBanner[] }) {
   const [api, setApi] = useState<CarouselApi>()
   const [activeIndex, setActiveIndex] = useState(0)
 
   useEffect(() => {
     if (!api) return
-    setActiveIndex(api.selectedScrollSnap())
-    api.on("select", () => setActiveIndex(api.selectedScrollSnap()))
+    const updateActiveIndex = () => setActiveIndex(api.selectedScrollSnap())
+    queueMicrotask(updateActiveIndex)
+    api.on("select", updateActiveIndex)
+
+    return () => {
+      api.off("select", updateActiveIndex)
+    }
   }, [api])
 
   return (
@@ -34,7 +35,7 @@ export function Hero() {
               <CarouselItem key={banner.id}>
                 <div className="relative aspect-[1376/768] w-full overflow-hidden rounded-lg bg-muted">
                   <Image
-                    src={banner.src}
+                    src={banner.imageUrl}
                     alt={banner.alt}
                     fill
                     sizes="(min-width: 1280px) 1280px, 100vw"

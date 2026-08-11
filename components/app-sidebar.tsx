@@ -59,7 +59,7 @@ const navMain = [
   },
   {
     title: "Settings",
-    url: "#",
+    url: "/admin/settings",
     icon: <Settings2Icon />,
   },
 ]

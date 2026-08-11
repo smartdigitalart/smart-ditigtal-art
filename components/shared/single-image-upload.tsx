@@ -21,6 +21,7 @@ export function SingleImageUpload({
   uploadId,
   uploadIdField = "id",
   originalValue = null,
+  helperText = "PNG or JPG, up to 10MB.",
 }: {
   value: string | null
   onChange: (url: string | null) => void
@@ -34,6 +35,7 @@ export function SingleImageUpload({
   uploadId?: string
   uploadIdField?: string
   originalValue?: string | null
+  helperText?: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -141,7 +143,7 @@ export function SingleImageUpload({
         >
           {value ? "Change image" : label}
         </Button>
-        <p className="text-xs text-muted-foreground">PNG or JPG, up to 10MB.</p>
+        <p className="text-xs text-muted-foreground">{helperText}</p>
       </div>
 
       <input
