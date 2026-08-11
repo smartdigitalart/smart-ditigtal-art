@@ -28,8 +28,12 @@ export function ProductGallery({
 
   useEffect(() => {
     if (!api) return
-    setActiveIndex(api.selectedScrollSnap())
-    api.on("select", () => setActiveIndex(api.selectedScrollSnap()))
+    const updateActiveIndex = () => setActiveIndex(api.selectedScrollSnap())
+    api.on("select", updateActiveIndex)
+
+    return () => {
+      api.off("select", updateActiveIndex)
+    }
   }, [api])
 
   useEffect(() => {
@@ -47,9 +51,9 @@ export function ProductGallery({
   }
 
   return (
-    <div className="flex flex-col-reverse gap-3 sm:flex-row">
+    <div className="flex w-full max-w-full min-w-0 flex-col-reverse gap-3 overflow-hidden sm:flex-row">
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto sm:w-20 sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto">
+        <div className="flex max-w-full min-w-0 gap-2 overflow-x-auto sm:w-20 sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto">
           {images.map((image, index) => (
             <button
               key={image.id}
@@ -76,7 +80,7 @@ export function ProductGallery({
       <Carousel
         setApi={setApi}
         opts={{ loop: images.length > 1 }}
-        className="w-full"
+        className="w-full min-w-0 flex-1 overflow-hidden"
       >
         <CarouselContent>
           {images.map((image) => (

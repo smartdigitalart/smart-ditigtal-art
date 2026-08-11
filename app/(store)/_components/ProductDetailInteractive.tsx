@@ -50,7 +50,7 @@ export function ProductDetailInteractive({
 
   return (
     <>
-      <div>
+      <div className="min-w-0">
         <ProductGallery
           images={galleryImages}
           name={name}
@@ -58,7 +58,7 @@ export function ProductDetailInteractive({
         />
       </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="min-w-0 flex flex-col gap-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             {brandName && (
