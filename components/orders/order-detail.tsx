@@ -12,7 +12,6 @@ import {
   Loader2,
   PackageIcon,
   PencilIcon,
-  PrinterIcon,
   RefreshCcwIcon,
   RotateCcwIcon,
   StickyNoteIcon,
@@ -38,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
@@ -140,7 +138,7 @@ export function OrderDetail({
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between gap-4 print:hidden">
+      <div className="flex items-center justify-between gap-4">
         <Button
           variant="ghost"
           size="sm"
@@ -153,26 +151,20 @@ export function OrderDetail({
           Back to orders
         </Button>
         {isAdmin && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <PrinterIcon data-icon="inline-start" />
-              Print invoice
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setDeleteOpen(true)}
-            >
-              <Trash2Icon data-icon="inline-start" />
-              Delete
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2Icon data-icon="inline-start" />
+            Delete
+          </Button>
         )}
       </div>
 
       <div className="rounded-xl border border-border bg-muted/30 p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Order
@@ -183,17 +175,54 @@ export function OrderDetail({
             <p className="mt-1 text-sm text-muted-foreground">
               Placed on {new Date(order.createdAt).toLocaleDateString()}
             </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <Badge
-              variant="outline"
-              className={`border-transparent ${ORDER_STATUS_STYLES[savedStatus]}`}
-            >
-              {savedStatus}
-            </Badge>
-            <span className="text-2xl font-bold text-foreground">
+            <span className="mt-3 block text-2xl font-bold text-foreground">
               ৳{order.total.toFixed(2)}
             </span>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Status
+            </p>
+            {isAdmin ? (
+              <div className="flex items-center gap-2">
+                <Select
+                  value={status}
+                  onValueChange={(value) =>
+                    value && setStatus(value as OrderStatus)
+                  }
+                >
+                  <SelectTrigger
+                    size="sm"
+                    className={`w-36 border-transparent font-medium ${ORDER_STATUS_STYLES[status]}`}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {STATUS_ITEMS.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.icon}
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {status !== savedStatus && (
+                  <Button size="sm" onClick={handleSave} disabled={saving}>
+                    {saving && <Loader2 className="animate-spin" />}
+                    Save
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Badge
+                variant="outline"
+                className={`border-transparent ${ORDER_STATUS_STYLES[savedStatus]}`}
+              >
+                {savedStatus}
+              </Badge>
+            )}
           </div>
         </div>
       </div>
@@ -269,15 +298,100 @@ export function OrderDetail({
                 )
               })}
             </CardContent>
-            <CardFooter className="justify-between border-t pt-4">
-              <span className="text-sm font-medium text-muted-foreground">
-                Total
-              </span>
-              <span className="text-lg font-bold text-foreground">
-                ৳{order.total.toFixed(2)}
-              </span>
+            <CardFooter className="flex-col items-stretch gap-2 border-t pt-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="tabular-nums text-foreground">
+                  ৳{(order.total - order.deliveryCharge).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Delivery</span>
+                <span className="tabular-nums text-foreground">
+                  ৳{order.deliveryCharge.toFixed(2)}
+                </span>
+              </div>
+              <Separator className="my-1" />
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-foreground">Total</span>
+                <span className="text-lg font-bold text-foreground">
+                  ৳{order.total.toFixed(2)}
+                </span>
+              </div>
             </CardFooter>
           </Card>
+
+          {isAdmin && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <StickyNoteIcon className="size-4" />
+                  Internal notes
+                </CardTitle>
+                <CardDescription>
+                  Private to admins. Never shown to the customer.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={notesDraft}
+                  onChange={(event) => setNotesDraft(event.target.value)}
+                  placeholder="e.g. Called customer to confirm address..."
+                  rows={4}
+                />
+              </CardContent>
+              <CardFooter className="justify-end border-t pt-4">
+                <Button
+                  size="sm"
+                  disabled={updateNotes.isPending || notesDraft === savedNotes}
+                  onClick={handleSaveNotes}
+                >
+                  {updateNotes.isPending && <Loader2 className="animate-spin" />}
+                  Save notes
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+
+          {isAdmin && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Status history</CardTitle>
+                <CardDescription>Audit trail of status changes.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {historyLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading…</p>
+                ) : statusHistory && statusHistory.length > 0 ? (
+                  <ul className="flex flex-col gap-4">
+                    {statusHistory.map((entry) => (
+                      <li key={entry.id} className="flex items-start gap-3">
+                        <div className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-foreground">
+                            {entry.status}
+                            {entry.changedByName && (
+                              <span className="font-normal text-muted-foreground">
+                                {" "}
+                                &middot; {entry.changedByName}
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(entry.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No status changes recorded yet.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="flex flex-col gap-4">
@@ -310,7 +424,6 @@ export function OrderDetail({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="print:hidden"
                     aria-label="Edit shipping address"
                     onClick={() => {
                       setAddressDraft(savedAddress)
@@ -330,7 +443,7 @@ export function OrderDetail({
                       placeholder="Shipping address"
                       rows={3}
                     />
-                    <div className="flex justify-end gap-2 print:hidden">
+                    <div className="flex justify-end gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -370,134 +483,13 @@ export function OrderDetail({
                     )}
                   </>
                 )}
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <span className="text-sm text-foreground">
-                {order.paymentMethod}
-              </span>
-            </CardContent>
-          </Card>
-
-          {isAdmin && (
-            <Card className="print:hidden">
-              <CardHeader>
-                <CardTitle>Order status</CardTitle>
-                <CardDescription>Update the fulfillment status.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="order-status">Status</FieldLabel>
-                    <Select
-                      value={status}
-                      onValueChange={(value) =>
-                        value && setStatus(value as OrderStatus)
-                      }
-                    >
-                      <SelectTrigger id="order-status" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {STATUS_ITEMS.map((item) => (
-                            <SelectItem key={item.value} value={item.value}>
-                              {item.icon}
-                              {item.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                </FieldGroup>
-              </CardContent>
-              <CardFooter className="justify-end border-t pt-4">
-                <Button
-                  onClick={handleSave}
-                  disabled={saving || status === savedStatus}
-                >
-                  {saving && <Loader2 className="animate-spin" />}
-                  Update status
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
-
-          {isAdmin && (
-            <Card className="print:hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <StickyNoteIcon className="size-4" />
-                  Internal notes
-                </CardTitle>
-                <CardDescription>
-                  Private to admins. Never shown to the customer.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={notesDraft}
-                  onChange={(event) => setNotesDraft(event.target.value)}
-                  placeholder="e.g. Called customer to confirm address..."
-                  rows={4}
-                />
-              </CardContent>
-              <CardFooter className="justify-end border-t pt-4">
-                <Button
-                  size="sm"
-                  disabled={updateNotes.isPending || notesDraft === savedNotes}
-                  onClick={handleSaveNotes}
-                >
-                  {updateNotes.isPending && <Loader2 className="animate-spin" />}
-                  Save notes
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
-
-          {isAdmin && (
-            <Card className="print:hidden">
-              <CardHeader>
-                <CardTitle>Status history</CardTitle>
-                <CardDescription>Audit trail of status changes.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {historyLoading ? (
-                  <p className="text-sm text-muted-foreground">Loading…</p>
-                ) : statusHistory && statusHistory.length > 0 ? (
-                  <ul className="flex flex-col gap-4">
-                    {statusHistory.map((entry) => (
-                      <li key={entry.id} className="flex items-start gap-3">
-                        <div className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-foreground">
-                            {entry.status}
-                            {entry.changedByName && (
-                              <span className="font-normal text-muted-foreground">
-                                {" "}
-                                &middot; {entry.changedByName}
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(entry.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No status changes recorded yet.
-                  </p>
-                )}
+                <Separator className="my-1" />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Payment</span>
+                  <span className="text-sm text-foreground">
+                    {order.paymentMethod}
+                  </span>
+                </div>
               </CardContent>
             </Card>
           )}

@@ -194,3 +194,10 @@ export async function deleteOrderAction(id: string): Promise<void> {
   const { error } = await supabase.from("orders").delete().eq("id", id)
   if (error) throw error
 }
+
+export async function deleteOrdersAction(ids: string[]): Promise<void> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+  const { error } = await supabase.from("orders").delete().in("id", ids)
+  if (error) throw error
+}

@@ -50,7 +50,12 @@ import {
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
 import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
-import { useAdminOrders, useDeleteOrder, useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
+import {
+  useAdminOrders,
+  useDeleteOrder,
+  useDeleteOrders,
+  useUpdateOrderStatus,
+} from "@/lib/api/use-admin-orders"
 import { ORDER_STATUS_STYLES, type Order, type OrderStatus } from "@/lib/types/order"
 import { formatOrderId } from "@/lib/orders/format-order-id"
 import { exportOrdersToCsv } from "@/lib/orders/export-orders-csv"
@@ -88,6 +93,7 @@ export default function OrdersPage() {
   const { data, isLoading: loading } = useAdminOrders()
   const updateStatus = useUpdateOrderStatus()
   const deleteOrder = useDeleteOrder()
+  const deleteOrders = useDeleteOrders()
   const orders = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
@@ -124,15 +130,19 @@ export default function OrdersPage() {
   )
   const selectedCount = selectedIndexes.length
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     const idsToRemove = selectedIndexes
       .map((index) => filtered[Number(index)]?.id)
       .filter((id): id is string => !!id)
-    void Promise.all(idsToRemove.map((id) => deleteOrder.mutateAsync(id)))
-    toast.success(
-      `Deleted ${selectedCount} order${selectedCount > 1 ? "s" : ""}`
-    )
     setRowSelection({})
+    try {
+      await deleteOrders.mutateAsync(idsToRemove)
+      toast.success(
+        `Deleted ${idsToRemove.length} order${idsToRemove.length > 1 ? "s" : ""}`
+      )
+    } catch {
+      toast.error("Failed to delete orders")
+    }
   }
 
   const handleBulkStatusUpdate = (newStatus: OrderStatus) => {

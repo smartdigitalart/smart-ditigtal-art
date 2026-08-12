@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
   deleteOrderAction,
+  deleteOrdersAction,
   getOrderStatusHistoryAction,
   listOrdersAction,
   updateOrderNotesAction,
@@ -74,6 +75,16 @@ export function useDeleteOrder() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => deleteOrderAction(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: KEY })
+    },
+  })
+}
+
+export function useDeleteOrders() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => deleteOrdersAction(ids),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: KEY })
     },
