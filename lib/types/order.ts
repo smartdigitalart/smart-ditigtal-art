@@ -9,6 +9,9 @@ export const ORDER_STATUSES = [
 export type OrderStatus = (typeof ORDER_STATUSES)[number]
 
 export interface OrderItem {
+  productId: string | null
+  productSlug: string | null
+  image: string | null
   productName: string
   quantity: number
   price: number

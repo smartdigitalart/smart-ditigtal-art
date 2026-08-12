@@ -65,7 +65,7 @@ export function CheckoutForm({
 
     setSubmitting(true)
     try {
-      const { orderId } = await createOrderAction({
+      const { orderNumber } = await createOrderAction({
         items: items.map((item) => ({
           productId: item.productId,
           variantId: item.variantId,
@@ -77,7 +77,7 @@ export function CheckoutForm({
         deliveryZone,
       })
       onOrderPlaced?.()
-      router.push(`/checkout/success?orderId=${orderId}`)
+      router.push(`/checkout/success?orderNumber=${orderNumber}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to place order")
     } finally {

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -15,6 +16,7 @@ import {
   RefreshCcwIcon,
   RotateCcwIcon,
   StickyNoteIcon,
+  Trash2Icon,
   XCircleIcon,
 } from "lucide-react"
 
@@ -39,7 +41,9 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
 import {
+  useDeleteOrder,
   useOrderStatusHistory,
   useUpdateOrderNotes,
   useUpdateOrderShippingAddress,
@@ -73,6 +77,8 @@ export function OrderDetail({
   const updateStatus = useUpdateOrderStatus()
   const updateNotes = useUpdateOrderNotes()
   const updateShippingAddress = useUpdateOrderShippingAddress()
+  const deleteOrder = useDeleteOrder()
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const { data: statusHistory, isLoading: historyLoading } = useOrderStatusHistory(
     order.id,
     isAdmin
@@ -122,46 +128,73 @@ export function OrderDetail({
     }
   }
 
+  const handleDelete = async () => {
+    try {
+      await deleteOrder.mutateAsync(order.id)
+      toast.success(`Deleted ${formatOrderId(order.orderNumber)}`)
+      router.push("/admin/orders")
+    } catch {
+      toast.error("Failed to delete order")
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-2 mb-2 print:hidden"
-            onClick={() =>
-              router.push(viewer === "admin" ? "/admin/orders" : "/profile/orders")
-            }
-          >
-            <ArrowLeftIcon data-icon="inline-start" />
-            Back to orders
-          </Button>
-          <h1 className="text-lg font-bold tracking-tight text-foreground">
-            {formatOrderId(order.orderNumber)}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Placed on {new Date(order.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="print:hidden"
-              onClick={() => window.print()}
-            >
+      <div className="flex items-center justify-between gap-4 print:hidden">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-2"
+          onClick={() =>
+            router.push(viewer === "admin" ? "/admin/orders" : "/profile/orders")
+          }
+        >
+          <ArrowLeftIcon data-icon="inline-start" />
+          Back to orders
+        </Button>
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
               <PrinterIcon data-icon="inline-start" />
               Print invoice
             </Button>
-          )}
-          <Badge
-            variant="outline"
-            className={`border-transparent ${ORDER_STATUS_STYLES[savedStatus]}`}
-          >
-            {savedStatus}
-          </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2Icon data-icon="inline-start" />
+              Delete
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-muted/30 p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Order
+            </p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              {formatOrderId(order.orderNumber)}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Placed on {new Date(order.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <Badge
+              variant="outline"
+              className={`border-transparent ${ORDER_STATUS_STYLES[savedStatus]}`}
+            >
+              {savedStatus}
+            </Badge>
+            <span className="text-2xl font-bold text-foreground">
+              ৳{order.total.toFixed(2)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -175,28 +208,66 @@ export function OrderDetail({
                 this order.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {order.items.map((item, index) => (
-                <div key={index}>
-                  {index > 0 && <Separator className="mb-3" />}
+            <CardContent className="flex flex-col gap-4">
+              {order.items.map((item, index) => {
+                const href = isAdmin
+                  ? item.productId
+                    ? `/admin/products/${item.productId}/edit`
+                    : null
+                  : item.productSlug
+                    ? `/products/${item.productSlug}`
+                    : null
+
+                const row = (
                   <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <PackageIcon className="size-4 text-muted-foreground" />
+                    <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.productName}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex size-full items-center justify-center text-muted-foreground">
+                          <PackageIcon className="size-5" />
+                        </div>
+                      )}
+                      <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background">
+                        {item.quantity}
+                      </span>
                     </div>
-                    <div className="flex flex-1 flex-col">
-                      <span className="text-sm font-medium text-foreground">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-medium text-foreground">
                         {item.productName}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        Qty {item.quantity}
+                        ৳{item.price.toFixed(2)} each
                       </span>
                     </div>
-                    <span className="text-sm font-medium tabular-nums text-foreground">
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
                       ৳{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
-                </div>
-              ))}
+                )
+
+                return (
+                  <div key={index}>
+                    {index > 0 && <Separator className="mb-4" />}
+                    {href ? (
+                      <Link
+                        href={href}
+                        className="-m-1 block rounded-lg p-1 transition-colors hover:bg-muted/50"
+                      >
+                        {row}
+                      </Link>
+                    ) : (
+                      row
+                    )}
+                  </div>
+                )
+              })}
             </CardContent>
             <CardFooter className="justify-between border-t pt-4">
               <span className="text-sm font-medium text-muted-foreground">
@@ -432,6 +503,16 @@ export function OrderDetail({
           )}
         </div>
       </div>
+
+      {isAdmin && (
+        <ConfirmDeleteDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          title="Delete order?"
+          description={`This will permanently delete ${formatOrderId(order.orderNumber)}. This can't be undone.`}
+          onConfirm={() => void handleDelete()}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -48,7 +49,8 @@ import {
   DataTableRowActions,
   type DataTableRowAction,
 } from "@/components/data-table/data-table-row-actions"
-import { useAdminOrders, useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
+import { ConfirmDeleteDialog } from "@/components/data-table/confirm-delete-dialog"
+import { useAdminOrders, useDeleteOrder, useUpdateOrderStatus } from "@/lib/api/use-admin-orders"
 import { ORDER_STATUS_STYLES, type Order, type OrderStatus } from "@/lib/types/order"
 import { formatOrderId } from "@/lib/orders/format-order-id"
 import { exportOrdersToCsv } from "@/lib/orders/export-orders-csv"
@@ -85,11 +87,13 @@ export default function OrdersPage() {
   const router = useRouter()
   const { data, isLoading: loading } = useAdminOrders()
   const updateStatus = useUpdateOrderStatus()
+  const deleteOrder = useDeleteOrder()
   const orders = data?.items ?? []
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   const filtered = useMemo(() => {
     return orders.filter((order) => {
@@ -121,7 +125,13 @@ export default function OrdersPage() {
   const selectedCount = selectedIndexes.length
 
   const handleBulkDelete = () => {
-    toast.error("Orders can't be deleted here.")
+    const idsToRemove = selectedIndexes
+      .map((index) => filtered[Number(index)]?.id)
+      .filter((id): id is string => !!id)
+    void Promise.all(idsToRemove.map((id) => deleteOrder.mutateAsync(id)))
+    toast.success(
+      `Deleted ${selectedCount} order${selectedCount > 1 ? "s" : ""}`
+    )
     setRowSelection({})
   }
 
@@ -220,11 +230,44 @@ export default function OrdersPage() {
       {
         id: "items",
         header: "Items",
-        cell: ({ row }) => (
-          <span className="text-sm tabular-nums text-muted-foreground">
-            {row.original.items.length}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const items = row.original.items
+          const shown = items.slice(0, 3)
+          return (
+            <div
+              className="flex items-center"
+              title={items.map((item) => item.productName).join(", ")}
+            >
+              <div className="flex -space-x-2">
+                {shown.map((item, i) => (
+                  <div
+                    key={i}
+                    className="relative size-8 shrink-0 overflow-hidden rounded-full border-2 border-background bg-muted"
+                  >
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.productName}
+                        fill
+                        sizes="32px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-full items-center justify-center text-muted-foreground">
+                        <PackageIcon className="size-3" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {items.length > shown.length && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  +{items.length - shown.length}
+                </span>
+              )}
+            </div>
+          )
+        },
       },
       {
         accessorKey: "deliveryZone",
@@ -294,13 +337,31 @@ export default function OrdersPage() {
                 },
               })),
             },
+            {
+              label: "Delete",
+              icon: <Trash2Icon />,
+              destructive: true,
+              separatorBefore: true,
+              confirm: {
+                title: "Delete order?",
+                description: `This will permanently delete ${formatOrderId(row.original.orderNumber)}. This can't be undone.`,
+                confirmLabel: "Delete",
+              },
+              onClick: () => {
+                deleteOrder.mutate(row.original.id, {
+                  onSuccess: () =>
+                    toast.success(`Deleted ${formatOrderId(row.original.orderNumber)}`),
+                  onError: () => toast.error("Failed to delete order"),
+                })
+              },
+            },
           ]
           return <DataTableRowActions actions={actions} />
         },
         size: 40,
       },
     ],
-    [router, updateStatus]
+    [router, updateStatus, deleteOrder]
   )
 
   return (
@@ -372,7 +433,11 @@ export default function OrdersPage() {
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkDeleteOpen(true)}
+              >
                 <Trash2Icon data-icon="inline-start" />
                 Delete ({selectedCount})
               </Button>
@@ -429,6 +494,14 @@ export default function OrdersPage() {
         globalFilter={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedCount} order${selectedCount > 1 ? "s" : ""}?`}
+        description="This will permanently delete the selected orders. This can't be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

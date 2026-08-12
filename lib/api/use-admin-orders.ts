@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  deleteOrderAction,
   getOrderStatusHistoryAction,
   listOrdersAction,
   updateOrderNotesAction,
@@ -63,6 +64,16 @@ export function useUpdateOrderShippingAddress() {
       id: string
       shippingAddress: string
     }) => updateOrderShippingAddressAction(id, shippingAddress),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: KEY })
+    },
+  })
+}
+
+export function useDeleteOrder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteOrderAction(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: KEY })
     },

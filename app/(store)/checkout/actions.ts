@@ -19,7 +19,7 @@ export interface CheckoutPayload {
 
 export async function createOrderAction(
   payload: CheckoutPayload
-): Promise<{ orderId: string }> {
+): Promise<{ orderId: string; orderNumber: number }> {
   if (payload.items.length === 0) {
     throw new Error("Your cart is empty")
   }
@@ -112,7 +112,7 @@ export async function createOrderAction(
       status: "Pending",
       total,
     })
-    .select("id")
+    .select("id, order_number")
     .single()
 
   if (orderError || !order) {
@@ -127,5 +127,5 @@ export async function createOrderAction(
     throw new Error("Failed to save order items")
   }
 
-  return { orderId: order.id as string }
+  return { orderId: order.id as string, orderNumber: Number(order.order_number) }
 }

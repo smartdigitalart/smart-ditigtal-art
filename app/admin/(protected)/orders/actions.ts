@@ -17,13 +17,27 @@ export async function listOrdersAction(): Promise<Order[]> {
   const { data: profiles } = await supabase.from("profiles").select("id, name, email")
   const { data: items } = await supabase
     .from("order_items")
-    .select("order_id, product_name, quantity, price")
+    .select("order_id, product_id, product_name, quantity, price")
+  const { data: products } = await supabase.from("products").select("id, slug, images")
 
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]))
+  const productById = new Map(
+    (products ?? []).map((p) => [
+      p.id as string,
+      {
+        slug: p.slug as string,
+        image: (p.images as { id: string; url: string }[] | null)?.[0]?.url ?? null,
+      },
+    ])
+  )
   const itemsByOrder = new Map<string, Order["items"]>()
   for (const item of items ?? []) {
+    const product = item.product_id ? productById.get(item.product_id) : undefined
     const list = itemsByOrder.get(item.order_id) ?? []
     list.push({
+      productId: item.product_id,
+      productSlug: product?.slug ?? null,
+      image: product?.image ?? null,
       productName: item.product_name,
       quantity: item.quantity,
       price: Number(item.price),
@@ -35,7 +49,7 @@ export async function listOrdersAction(): Promise<Order[]> {
     const profile = order.customer_id ? profileById.get(order.customer_id) : null
     return mapOrder(
       order,
-      profile?.name ?? "Guest",
+      profile?.name ?? (order.customer_name as string | null) ?? "Guest",
       profile?.email ?? "",
       itemsByOrder.get(order.id) ?? []
     )
@@ -64,18 +78,41 @@ export async function getOrderByIdAction(id: string): Promise<Order | null> {
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("product_name, quantity, price")
+    .select("product_id, product_name, quantity, price")
     .eq("order_id", id)
+
+  const productIds = (items ?? [])
+    .map((item) => item.product_id)
+    .filter((productId): productId is string => !!productId)
+  const { data: products } =
+    productIds.length > 0
+      ? await supabase.from("products").select("id, slug, images").in("id", productIds)
+      : { data: [] }
+  const productById = new Map(
+    (products ?? []).map((p) => [
+      p.id as string,
+      {
+        slug: p.slug as string,
+        image: (p.images as { id: string; url: string }[] | null)?.[0]?.url ?? null,
+      },
+    ])
+  )
 
   return mapOrder(
     order,
-    profile?.name ?? "Guest",
+    profile?.name ?? (order.customer_name as string | null) ?? "Guest",
     profile?.email ?? "",
-    (items ?? []).map((item) => ({
-      productName: item.product_name,
-      quantity: item.quantity,
-      price: Number(item.price),
-    }))
+    (items ?? []).map((item) => {
+      const product = item.product_id ? productById.get(item.product_id) : undefined
+      return {
+        productId: item.product_id,
+        productSlug: product?.slug ?? null,
+        image: product?.image ?? null,
+        productName: item.product_name,
+        quantity: item.quantity,
+        price: Number(item.price),
+      }
+    })
   )
 }
 
@@ -148,5 +185,12 @@ export async function updateOrderShippingAddressAction(
     .from("orders")
     .update({ shipping_address: shippingAddress || null })
     .eq("id", id)
+  if (error) throw error
+}
+
+export async function deleteOrderAction(id: string): Promise<void> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+  const { error } = await supabase.from("orders").delete().eq("id", id)
   if (error) throw error
 }

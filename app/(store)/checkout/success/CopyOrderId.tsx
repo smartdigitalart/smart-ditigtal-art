@@ -4,13 +4,15 @@ import { useState } from "react"
 import { CheckIcon, CopyIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { formatOrderId } from "@/lib/orders/format-order-id"
 
-export function CopyOrderId({ orderId }: { orderId: string }) {
+export function CopyOrderId({ orderNumber }: { orderNumber: number }) {
   const [copied, setCopied] = useState(false)
+  const formattedOrderId = formatOrderId(orderNumber)
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(orderId)
+      await navigator.clipboard.writeText(formattedOrderId)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -20,9 +22,9 @@ export function CopyOrderId({ orderId }: { orderId: string }) {
 
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
-      <span className="text-sm text-muted-foreground">Order reference:</span>
+      <span className="text-sm text-muted-foreground">Order ID:</span>
       <span className="font-mono text-sm text-foreground">
-        {orderId.slice(0, 8)}
+        {formattedOrderId}
       </span>
       <Button
         type="button"
