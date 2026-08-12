@@ -2,15 +2,10 @@ import { createClient } from "@/lib/supabase/server"
 import { ProductCard, type FeaturedProduct } from "@/app/(store)/_components/ProductCard"
 import { getDescendantCategoryIds, type CategoryNode } from "@/lib/store/categories"
 
-// Grid item order per position within a 4-item block (art, art, perfume, perfume).
-// Mobile is 2 cols, so each row must read art/perfume; desktop is 4 cols, so
-// each row must read art, art, perfume, perfume.
-const ORDER_CLASSES = [
-  "order-1 lg:order-1", // art #1
-  "order-3 lg:order-2", // art #2
-  "order-2 lg:order-3", // perfume #1
-  "order-4 lg:order-4", // perfume #2
-]
+interface OrderedProduct {
+  product: FeaturedProduct
+  mobileOrder: number
+}
 
 function toProduct(row: Record<string, unknown>): FeaturedProduct {
   const images = row.images as { id: string; url: string }[] | null
@@ -25,7 +20,7 @@ function toProduct(row: Record<string, unknown>): FeaturedProduct {
   }
 }
 
-async function getArtAndPerfumeProducts(): Promise<FeaturedProduct[]> {
+async function getArtAndPerfumeProducts(): Promise<OrderedProduct[]> {
   const supabase = await createClient()
 
   const [{ data: categoryRows }, { data: productRows }] = await Promise.all([
@@ -60,11 +55,22 @@ async function getArtAndPerfumeProducts(): Promise<FeaturedProduct[]> {
     .filter((row) => perfumeIds.has(row.category_id as string))
     .map(toProduct)
 
+  // DOM order is always [art, art, perfume, perfume] per block of up to 4, which
+  // already reads correctly on desktop (4 cols: two art then two perfume per row).
+  // Mobile (2 cols) needs art/perfume interleaved instead, so each item also gets
+  // a block-unique mobileOrder used to reorder it via CSS `order` below lg. It must
+  // be unique across the whole list (not just 0-3 repeating), otherwise CSS order
+  // regroups same-slot items from *different* blocks together instead of keeping
+  // each block's own row intact.
   const blockCount = Math.max(Math.ceil(artProducts.length / 2), Math.ceil(perfumeProducts.length / 2))
-  const merged: FeaturedProduct[] = []
+  const merged: OrderedProduct[] = []
   for (let i = 0; i < blockCount; i++) {
-    merged.push(...artProducts.slice(i * 2, i * 2 + 2))
-    merged.push(...perfumeProducts.slice(i * 2, i * 2 + 2))
+    const base = i * 4
+    const artPair = artProducts.slice(i * 2, i * 2 + 2)
+    const perfumePair = perfumeProducts.slice(i * 2, i * 2 + 2)
+
+    artPair.forEach((product, j) => merged.push({ product, mobileOrder: base + (j === 0 ? 0 : 2) }))
+    perfumePair.forEach((product, j) => merged.push({ product, mobileOrder: base + (j === 0 ? 1 : 3) }))
   }
 
   return merged
@@ -82,8 +88,13 @@ export async function CategoryProductsRow() {
           Products
         </h2>
         <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
-          {products.map((product, index) => (
-            <ProductCard key={product.id} product={product} className={ORDER_CLASSES[index % 4]} />
+          {products.map(({ product, mobileOrder }) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              className="order-[var(--mobile-order)] lg:order-none"
+              style={{ "--mobile-order": mobileOrder } as React.CSSProperties}
+            />
           ))}
         </div>
       </div>

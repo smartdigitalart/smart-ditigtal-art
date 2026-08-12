@@ -18,14 +18,20 @@ export interface FeaturedProduct {
 export function ProductCard({
   product,
   className,
+  style,
 }: {
   product: FeaturedProduct
   className?: string
+  style?: React.CSSProperties
 }) {
   const hasSale = product.salePrice != null && product.salePrice < product.price
 
   return (
-    <Link href={`/products/${product.slug}`} className={cn("group flex flex-col gap-3", className)}>
+    <Link
+      href={`/products/${product.slug}`}
+      className={cn("group flex flex-col gap-3", className)}
+      style={style}
+    >
       <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
         {product.image ? (
           <Lens zoomFactor={1.8} lensSize={140} className="absolute inset-0">

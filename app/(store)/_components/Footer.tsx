@@ -5,6 +5,25 @@ import { Mail } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import type { SiteSocialLinks } from "@/lib/types/site-settings";
 
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+   <svg viewBox="0 0 32 32" aria-hidden="true" {...props}>
+      <path
+         fill="currentColor"
+         d="M16.01 3.2C9.02 3.2 3.33 8.87 3.33 15.85c0 2.23.58 4.4 1.69 6.31L3.2 28.8l6.8-1.78a12.7 12.7 0 0 0 6.01 1.53c6.99 0 12.68-5.67 12.68-12.65S23 3.2 16.01 3.2Zm0 23.21c-1.92 0-3.8-.52-5.44-1.51l-.39-.23-4.03 1.06 1.08-3.93-.25-.4a10.48 10.48 0 0 1-1.61-5.56c0-5.8 4.78-10.51 10.65-10.51 2.84 0 5.51 1.1 7.52 3.08a10.43 10.43 0 0 1 3.11 7.43c-.01 5.8-4.79 10.57-10.64 10.57Zm5.84-7.89c-.32-.16-1.89-.93-2.18-1.04-.29-.11-.5-.16-.72.16-.21.32-.82 1.04-1.01 1.25-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.58-.95-.85-1.59-1.89-1.78-2.21-.19-.32-.02-.49.14-.65.15-.14.32-.37.48-.56.16-.19.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.11 1.09-1.11 2.65s1.14 3.07 1.3 3.28c.16.21 2.25 3.43 5.45 4.81.76.33 1.36.53 1.82.67.76.24 1.46.21 2.01.13.61-.09 1.89-.77 2.15-1.52.27-.74.27-1.38.19-1.52-.08-.13-.29-.21-.61-.37Z"
+      />
+   </svg>
+);
+
+function toWhatsAppDigits(number: string) {
+   const digits = number.replace(/\D/g, "");
+
+   if (digits.startsWith("880")) return digits;
+   if (digits.startsWith("0")) return `880${digits.slice(1)}`;
+   if (digits.length === 10 && digits.startsWith("1")) return `880${digits}`;
+
+   return digits;
+}
+
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
    <svg viewBox="0 0 24 24" fill="#1877F2" {...props}>
       <path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.02 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.775-1.63 1.57v1.88h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.92 8.437-9.94Z" />
@@ -54,6 +73,8 @@ const Footer = ({ socialLinks }: { socialLinks: SiteSocialLinks }) => {
    const emailHref = socialLinks.email
       ? `mailto:${socialLinks.email}`
       : "mailto:info@smartdigitalartbd.com";
+   const whatsappNumber = socialLinks.whatsapp.trim();
+   const whatsappDigits = toWhatsAppDigits(whatsappNumber);
    const links = [
       { name: "Facebook", href: socialLinks.facebook, Icon: FacebookIcon },
       { name: "Instagram", href: socialLinks.instagram, Icon: InstagramIcon },
@@ -67,8 +88,8 @@ const Footer = ({ socialLinks }: { socialLinks: SiteSocialLinks }) => {
 
    return (
       <footer className="mt-auto w-full border-t border-border bg-muted/30">
-         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-4 py-12 sm:px-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-            <div className="flex flex-col gap-4">
+         <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-10 px-4 py-12 sm:px-6 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+            <div className="col-span-2 flex flex-col gap-4 sm:col-span-1">
                <Image
                   src="/SMART_DIGITAL_ART_PAD_LOGO.jpg.jpeg"
                   alt="Smart Digital Art"
@@ -136,13 +157,17 @@ const Footer = ({ socialLinks }: { socialLinks: SiteSocialLinks }) => {
 
             <div className="flex flex-col gap-3">
                <h3 className="text-sm font-semibold text-foreground">Contact</h3>
-               <a
-                  href={emailHref}
-                  className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-               >
-                  <Mail className="size-4" />
-                  {socialLinks.email || "info@smartdigitalartbd.com"}
-               </a>
+               {whatsappNumber && whatsappDigits ? (
+                  <a
+                     href={`https://wa.me/${whatsappDigits}`}
+                     target="_blank"
+                     rel="noopener"
+                     className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                     <WhatsAppIcon className="size-4" />
+                     {whatsappNumber}
+                  </a>
+               ) : null}
             </div>
          </div>
 
@@ -158,7 +183,7 @@ const Footer = ({ socialLinks }: { socialLinks: SiteSocialLinks }) => {
                <a
                   href="https://www.coreitbd.com/"
                   target="_blank"
-                  rel="noreferrer noopener"
+                  rel="noopener"
                   className="font-medium text-foreground transition-colors hover:text-primary"
                >
                   Core IT
