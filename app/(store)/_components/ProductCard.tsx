@@ -15,11 +15,17 @@ export interface FeaturedProduct {
   isFromPrice?: boolean
 }
 
-export function ProductCard({ product }: { product: FeaturedProduct }) {
+export function ProductCard({
+  product,
+  className,
+}: {
+  product: FeaturedProduct
+  className?: string
+}) {
   const hasSale = product.salePrice != null && product.salePrice < product.price
 
   return (
-    <Link href={`/products/${product.slug}`} className="group flex flex-col gap-3">
+    <Link href={`/products/${product.slug}`} className={cn("group flex flex-col gap-3", className)}>
       <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
         {product.image ? (
           <Lens zoomFactor={1.8} lensSize={140} className="absolute inset-0">
