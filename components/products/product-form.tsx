@@ -361,15 +361,20 @@ export function ProductForm({ product }: { product?: Product }) {
                   variant="outline"
                   size="sm"
                   className="self-start"
-                  onClick={() =>
+                  onClick={() => {
+                    const productPrice = watch("price")
+                    const productSalePrice = watch("salePrice")
                     appendVariant({
                       label: "",
-                      price: 0,
-                      salePrice: null,
+                      price: Number.isFinite(productPrice) ? productPrice : 0,
+                      salePrice:
+                        productSalePrice != null && Number.isFinite(productSalePrice)
+                          ? productSalePrice
+                          : null,
                       image: null,
                       inStock: true,
                     })
-                  }
+                  }}
                 >
                   <PlusIcon data-icon="inline-start" />
                   Add variant

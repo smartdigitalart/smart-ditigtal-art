@@ -153,6 +153,17 @@ const Footer = ({ socialLinks }: { socialLinks: SiteSocialLinks }) => {
                © {new Date().getFullYear()} Smart Digital Art. All rights
                reserved.
             </p>
+            <p className="mt-1 text-center text-xs text-muted-foreground">
+               Developed by{" "}
+               <a
+                  href="https://www.coreitbd.com/"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="font-medium text-foreground transition-colors hover:text-primary"
+               >
+                  Core IT
+               </a>
+            </p>
          </div>
       </footer>
    );

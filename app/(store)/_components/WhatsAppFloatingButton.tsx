@@ -35,7 +35,7 @@ export default function WhatsAppFloatingButton({
       target="_blank"
       rel="noreferrer noopener"
       aria-label={`Chat on WhatsApp at ${number}`}
-      className="fixed right-4 bottom-4 flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none sm:right-6 sm:bottom-6"
+      className="fixed right-4 bottom-4 z-50 flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none sm:right-6 sm:bottom-6"
     >
       <WhatsAppIcon className="size-8" />
     </a>
