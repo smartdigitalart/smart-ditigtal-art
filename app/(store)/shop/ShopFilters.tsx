@@ -95,7 +95,9 @@ export function ShopFilters({ categories, brands, priceBounds }: ShopFiltersProp
   const handleClear = () => {
     const params = new URLSearchParams()
     const q = searchParams.get("q")
+    const collection = searchParams.get("collection")
     if (q) params.set("q", q)
+    if (collection) params.set("collection", collection)
     router.push(`/shop?${params.toString()}`, { scroll: false })
     setPriceRange([priceBounds.min, priceBounds.max])
   }
@@ -111,12 +113,12 @@ export function ShopFilters({ categories, brands, priceBounds }: ShopFiltersProp
     maxParam !== null
 
   const filterContent = (
-    <div className="space-y-6">
-      <div>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
         <h3 className="mb-3 text-sm font-medium text-foreground">Category</h3>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {roots.map((root) => (
-            <div key={root.id} className="space-y-2">
+            <div key={root.id} className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id={`cat-${root.slug}`}
@@ -146,9 +148,9 @@ export function ShopFilters({ categories, brands, priceBounds }: ShopFiltersProp
 
       <Separator />
 
-      <div>
+      <div className="flex flex-col gap-3">
         <h3 className="mb-3 text-sm font-medium text-foreground">Brand</h3>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {brands.map((brand) => (
             <div key={brand.id} className="flex items-center gap-2">
               <Checkbox
@@ -207,9 +209,9 @@ export function ShopFilters({ categories, brands, priceBounds }: ShopFiltersProp
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-full overflow-y-auto p-0 sm:max-w-sm">
+          <SheetContent side="left" className="w-full gap-0 p-0 sm:max-w-sm">
             <SheetHeader className="border-b border-border">
-              <div className="flex items-center justify-between">
+              <div className="flex min-h-8 items-center justify-between gap-3 pr-12">
                 <SheetTitle>Filters</SheetTitle>
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={handleClear}>
@@ -218,15 +220,17 @@ export function ShopFilters({ categories, brands, priceBounds }: ShopFiltersProp
                 )}
               </div>
             </SheetHeader>
-            <div className="px-4 pb-6">{filterContent}</div>
-            <SheetClose asChild>
-              <Button className="sticky bottom-0 m-4 mt-0">Show results</Button>
-            </SheetClose>
+            <div className="flex-1 overflow-y-auto px-4 py-6">{filterContent}</div>
+            <div className="border-t border-border bg-popover p-4">
+              <SheetClose asChild>
+                <Button className="w-full">Show results</Button>
+              </SheetClose>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
 
-      <aside className="hidden w-64 shrink-0 space-y-6 lg:block">
+      <aside className="hidden w-64 shrink-0 flex-col gap-6 lg:flex">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground">Filters</h2>
           {hasActiveFilters && (

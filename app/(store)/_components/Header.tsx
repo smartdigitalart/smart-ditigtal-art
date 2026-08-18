@@ -52,7 +52,7 @@ export default function Header() {
 
    return (
       <>
-      <header className="w-full border-b border-border">
+      <header className="w-full">
          <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             {mobileSearchOpen ? (
                <div className="flex w-full items-center gap-2 sm:hidden">

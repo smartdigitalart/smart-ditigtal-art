@@ -5,8 +5,10 @@ import { PlusIcon, SaveIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
 import {
+  deleteCategoryPromoCardUploadAction,
   deleteHeroBannerUploadAction,
   updateSiteSettingsAction,
+  uploadCategoryPromoCardAction,
   uploadHeroBannerAction,
 } from "@/app/admin/(protected)/settings/actions"
 import { SingleImageUpload } from "@/components/shared/single-image-upload"
@@ -27,6 +29,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type {
+  CategoryPromoCard,
   HeroBanner,
   SiteSettings,
   SiteSocialLinks,
@@ -34,6 +37,7 @@ import type {
 
 const MAX_BANNERS = 4
 const HERO_RECOMMENDED_SIZE = "Recommended size: 1376 x 768 px. PNG or JPG, up to 10MB."
+const PROMO_CARD_RECOMMENDED_SIZE = "Recommended size: 608 x 320 px or larger. PNG or JPG, up to 10MB."
 
 function newBanner(): HeroBanner {
   return {
@@ -45,10 +49,17 @@ function newBanner(): HeroBanner {
 
 export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
   const [originalImages, setOriginalImages] = useState(
-    () => new Set(settings.heroBanners.map((banner) => banner.imageUrl))
+    () =>
+      new Set([
+        ...settings.heroBanners.map((banner) => banner.imageUrl),
+        ...settings.categoryPromoCards.map((card) => card.imageUrl),
+      ])
   )
   const [heroBanners, setHeroBanners] = useState<HeroBanner[]>(
     settings.heroBanners.length ? settings.heroBanners : [newBanner()]
+  )
+  const [categoryPromoCards, setCategoryPromoCards] = useState<CategoryPromoCard[]>(
+    settings.categoryPromoCards
   )
   const [socialLinks, setSocialLinks] = useState<SiteSocialLinks>(
     settings.socialLinks
@@ -60,6 +71,15 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
       current.map((banner) =>
         banner.id === id ? { ...banner, ...patch } : banner
       )
+    )
+  }
+
+  const updatePromoCard = (
+    id: CategoryPromoCard["id"],
+    patch: Partial<CategoryPromoCard>
+  ) => {
+    setCategoryPromoCards((current) =>
+      current.map((card) => (card.id === id ? { ...card, ...patch } : card))
     )
   }
 
@@ -84,16 +104,31 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
     return uploadHeroBannerAction(payload)
   }
 
+  const uploadPromoCard = (promoCardId: string, formData: FormData) => {
+    const file = formData.get("file")
+    const payload = new FormData()
+    payload.append("promoCardId", promoCardId)
+    if (file) payload.append("file", file)
+    return uploadCategoryPromoCardAction(payload)
+  }
+
   const saveSettings = async () => {
     setSaving(true)
     try {
       const saved = await updateSiteSettingsAction({
         heroBanners,
+        categoryPromoCards,
         socialLinks,
       })
       setHeroBanners(saved.heroBanners)
+      setCategoryPromoCards(saved.categoryPromoCards)
       setSocialLinks(saved.socialLinks)
-      setOriginalImages(new Set(saved.heroBanners.map((banner) => banner.imageUrl)))
+      setOriginalImages(
+        new Set([
+          ...saved.heroBanners.map((banner) => banner.imageUrl),
+          ...saved.categoryPromoCards.map((card) => card.imageUrl),
+        ])
+      )
       toast.success("Site settings updated")
     } catch (error) {
       toast.error(
@@ -111,7 +146,7 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
           Storefront Settings
         </h1>
         <p className="text-sm text-muted-foreground">
-          Manage homepage banners and footer social links.
+          Manage homepage banners, promo cards, and footer social links.
         </p>
       </div>
 
@@ -181,6 +216,77 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
               Add banner
             </Button>
           </CardFooter>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Art and perfume cards</CardTitle>
+            <CardDescription>
+              Images and text shown below the homepage hero.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              {categoryPromoCards.map((card) => (
+                <Field key={card.id}>
+                  <FieldLabel>{card.title} card</FieldLabel>
+                  <SingleImageUpload
+                    value={card.imageUrl}
+                    onChange={(imageUrl) =>
+                      updatePromoCard(card.id, { imageUrl: imageUrl ?? "" })
+                    }
+                    size="h-28 w-52"
+                    label="Upload card image"
+                    uploadAction={(formData) => uploadPromoCard(card.id, formData)}
+                    deleteAction={deleteCategoryPromoCardUploadAction}
+                    uploadId={card.id}
+                    uploadIdField="promoCardId"
+                    originalValue={
+                      originalImages.has(card.imageUrl) ? card.imageUrl : null
+                    }
+                    helperText={PROMO_CARD_RECOMMENDED_SIZE}
+                  />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input
+                      value={card.eyebrow}
+                      placeholder="Small label"
+                      onChange={(event) =>
+                        updatePromoCard(card.id, { eyebrow: event.target.value })
+                      }
+                    />
+                    <Input
+                      value={card.title}
+                      placeholder="Title"
+                      onChange={(event) =>
+                        updatePromoCard(card.id, { title: event.target.value })
+                      }
+                    />
+                    <Input
+                      value={card.cta}
+                      placeholder="CTA text"
+                      onChange={(event) =>
+                        updatePromoCard(card.id, { cta: event.target.value })
+                      }
+                    />
+                    <Input
+                      value={card.alt}
+                      placeholder="Image alt text"
+                      onChange={(event) =>
+                        updatePromoCard(card.id, { alt: event.target.value })
+                      }
+                    />
+                  </div>
+                  <Input
+                    value={card.href}
+                    placeholder="/shop?category=painting"
+                    onChange={(event) =>
+                      updatePromoCard(card.id, { href: event.target.value })
+                    }
+                  />
+                </Field>
+              ))}
+            </FieldGroup>
+          </CardContent>
         </Card>
 
         <Card>

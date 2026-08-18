@@ -12,6 +12,7 @@ interface ShopSearchParams {
   min?: string
   max?: string
   stock?: string
+  collection?: string
 }
 
 async function getFilterOptions() {
@@ -89,7 +90,7 @@ async function getProducts(
 
   const { data } = await query.order("created_at", { ascending: false })
 
-  return (data ?? []).map((row) => {
+  const products = (data ?? []).map((row) => {
     const images = row.images as { id: string; url: string }[] | null
     return {
       id: row.id as string,
@@ -101,6 +102,14 @@ async function getProducts(
       hoverImage: images?.[1]?.url ?? null,
     }
   })
+
+  if (params.collection === "flash-deal") {
+    return products.filter(
+      (product) => product.salePrice !== null && product.salePrice < product.price
+    )
+  }
+
+  return products
 }
 
 export default async function ShopPage({
@@ -112,7 +121,13 @@ export default async function ShopPage({
   const { categories, brands, priceBounds } = await getFilterOptions()
   const products = await getProducts(params, categories, brands)
 
-  const heading = params.q ? `Search results for "${params.q}"` : "Shop"
+  const heading = params.q
+    ? `Search results for "${params.q}"`
+    : params.collection === "flash-deal"
+      ? "Special Flash Deal Offer"
+      : params.collection === "new-arrival"
+        ? "New Arrival"
+        : "Shop"
 
   return (
     <section className="w-full py-8">

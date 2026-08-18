@@ -38,6 +38,19 @@ const settingsSchema = z.object({
     )
     .min(1, "Add at least one banner.")
     .max(4, "Use up to 4 hero banners."),
+  categoryPromoCards: z
+    .array(
+      z.object({
+        id: z.enum(["art", "perfume"]),
+        href: z.string().trim().min(1, "Add a promo card link."),
+        imageUrl: z.string().trim().min(1, "Upload a promo card image."),
+        alt: z.string().trim().min(1, "Add alt text for the promo card."),
+        eyebrow: z.string().trim().min(1, "Add promo card eyebrow text."),
+        title: z.string().trim().min(1, "Add promo card title."),
+        cta: z.string().trim().min(1, "Add promo card button text."),
+      })
+    )
+    .length(2, "Keep both Art and Perfume promo cards."),
   socialLinks: z.object({
     facebook: optionalUrlSchema,
     instagram: optionalUrlSchema,
@@ -58,7 +71,7 @@ export async function getAdminSiteSettingsAction(): Promise<SiteSettings> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("site_settings")
-    .select("hero_banners, social_links")
+    .select("hero_banners, category_promo_cards, social_links")
     .eq("id", "main")
     .maybeSingle()
 
@@ -86,12 +99,13 @@ export async function updateSiteSettingsAction(
       {
         id: "main",
         hero_banners: parsed.data.heroBanners,
+        category_promo_cards: parsed.data.categoryPromoCards,
         social_links: parsed.data.socialLinks,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     )
-    .select("hero_banners, social_links")
+    .select("hero_banners, category_promo_cards, social_links")
     .single()
 
   if (error) throw new Error(error.message)
@@ -111,6 +125,24 @@ export async function uploadHeroBannerAction(
 
 export async function deleteHeroBannerUploadAction(
   _bannerId: string,
+  url: string
+): Promise<void> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+  const path = extractStoragePath("media", url)
+  if (!path) return
+  await supabase.storage.from("media").remove([path])
+}
+
+export async function uploadCategoryPromoCardAction(
+  formData: FormData
+): Promise<ImageUploadResult> {
+  await requireAdminProfile()
+  return uploadImageToMediaBucket(formData, "promoCardId", "site/category-promos")
+}
+
+export async function deleteCategoryPromoCardUploadAction(
+  _promoCardId: string,
   url: string
 ): Promise<void> {
   await requireAdminProfile()

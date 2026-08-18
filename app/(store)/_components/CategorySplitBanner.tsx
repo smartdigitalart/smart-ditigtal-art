@@ -1,38 +1,43 @@
 import Link from "next/link"
+import Image from "next/image"
 
-export function CategorySplitBanner() {
+import type { CategoryPromoCard } from "@/lib/types/site-settings"
+
+export function CategorySplitBanner({
+  cards,
+}: {
+  cards: CategoryPromoCard[]
+}) {
   return (
     <section className="w-full py-8">
       <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
-        <Link
-          href="/shop?category=painting"
-          className="group relative flex h-64 flex-col items-start justify-end overflow-hidden rounded-lg bg-muted p-8 transition-colors hover:bg-muted/80 sm:h-80"
-        >
-          <span className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Handmade & Digital
-          </span>
-          <h2 className="mt-1 text-3xl font-bold text-foreground sm:text-4xl">
-            Art
-          </h2>
-          <span className="mt-3 text-sm font-semibold text-foreground underline-offset-4 group-hover:underline">
-            Shop Art Collection
-          </span>
-        </Link>
-
-        <Link
-          href="/shop?category=perfume"
-          className="group relative flex h-64 flex-col items-start justify-end overflow-hidden rounded-lg bg-secondary p-8 transition-colors hover:bg-secondary/80 sm:h-80"
-        >
-          <span className="text-sm font-medium uppercase tracking-wide text-secondary-foreground/70">
-            Signature Scents
-          </span>
-          <h2 className="mt-1 text-3xl font-bold text-secondary-foreground sm:text-4xl">
-            Perfume
-          </h2>
-          <span className="mt-3 text-sm font-semibold text-secondary-foreground underline-offset-4 group-hover:underline">
-            Shop Perfume Collection
-          </span>
-        </Link>
+        {cards.map((card) => (
+          <Link
+            key={card.id}
+            href={card.href}
+            className="group relative flex h-72 flex-col items-start justify-end overflow-hidden rounded-lg bg-muted p-6 text-white sm:h-80 sm:p-8"
+          >
+            <Image
+              src={card.imageUrl}
+              alt={card.alt}
+              fill
+              sizes="(min-width: 1024px) 608px, (min-width: 768px) 50vw, 100vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+            <span className="relative flex max-w-xs flex-col items-start gap-2">
+              <span className="text-sm font-medium uppercase text-white/90">
+                {card.eyebrow}
+              </span>
+              <span className="text-3xl font-bold leading-tight text-white sm:text-4xl">
+                {card.title}
+              </span>
+              <span className="text-sm font-semibold text-white underline-offset-4 group-hover:underline">
+                {card.cta}
+              </span>
+            </span>
+          </Link>
+        ))}
       </div>
     </section>
   )
