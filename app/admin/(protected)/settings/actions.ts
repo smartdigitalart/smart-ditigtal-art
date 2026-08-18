@@ -71,7 +71,7 @@ export async function getAdminSiteSettingsAction(): Promise<SiteSettings> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("site_settings")
-    .select("hero_banners, category_promo_cards, social_links")
+    .select("hero_banners, social_links")
     .eq("id", "main")
     .maybeSingle()
 
@@ -93,19 +93,22 @@ export async function updateSiteSettingsAction(
   }
 
   const supabase = createAdminClient()
+  const socialLinksWithPromoCards = {
+    ...parsed.data.socialLinks,
+    categoryPromoCards: parsed.data.categoryPromoCards,
+  }
   const { data, error } = await supabase
     .from("site_settings")
     .upsert(
       {
         id: "main",
         hero_banners: parsed.data.heroBanners,
-        category_promo_cards: parsed.data.categoryPromoCards,
-        social_links: parsed.data.socialLinks,
+        social_links: socialLinksWithPromoCards,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     )
-    .select("hero_banners, category_promo_cards, social_links")
+    .select("hero_banners, social_links")
     .single()
 
   if (error) throw new Error(error.message)

@@ -117,7 +117,12 @@ export function normalizeSiteSettings(row: Record<string, unknown> | null): Site
   return {
     id: "main",
     heroBanners: normalizeHeroBanners(row.hero_banners),
-    categoryPromoCards: normalizeCategoryPromoCards(row.category_promo_cards),
+    categoryPromoCards: normalizeCategoryPromoCards(
+      row.category_promo_cards ??
+        (row.social_links && typeof row.social_links === "object"
+          ? (row.social_links as Record<string, unknown>).categoryPromoCards
+          : undefined)
+    ),
     socialLinks: normalizeSocialLinks(row.social_links),
   }
 }
@@ -126,7 +131,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("site_settings")
-    .select("hero_banners, category_promo_cards, social_links")
+    .select("hero_banners, social_links")
     .eq("id", "main")
     .maybeSingle()
 
