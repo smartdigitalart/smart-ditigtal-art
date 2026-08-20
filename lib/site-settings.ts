@@ -91,6 +91,11 @@ function normalizeCategoryPromoCards(value: unknown): CategoryPromoCard[] {
   })
 }
 
+function normalizeHeaderCategoryIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === "string")
+}
+
 function normalizeSocialLinks(value: unknown): SiteSocialLinks {
   if (!value || typeof value !== "object") return DEFAULT_SOCIAL_LINKS
   const links = value as Record<string, unknown>
@@ -111,19 +116,23 @@ export function normalizeSiteSettings(row: Record<string, unknown> | null): Site
       heroBanners: DEFAULT_HERO_BANNERS,
       categoryPromoCards: DEFAULT_CATEGORY_PROMO_CARDS,
       socialLinks: DEFAULT_SOCIAL_LINKS,
+      headerCategoryIds: [],
     }
   }
+
+  const socialLinksRow =
+    row.social_links && typeof row.social_links === "object"
+      ? (row.social_links as Record<string, unknown>)
+      : undefined
 
   return {
     id: "main",
     heroBanners: normalizeHeroBanners(row.hero_banners),
     categoryPromoCards: normalizeCategoryPromoCards(
-      row.category_promo_cards ??
-        (row.social_links && typeof row.social_links === "object"
-          ? (row.social_links as Record<string, unknown>).categoryPromoCards
-          : undefined)
+      row.category_promo_cards ?? socialLinksRow?.categoryPromoCards
     ),
     socialLinks: normalizeSocialLinks(row.social_links),
+    headerCategoryIds: normalizeHeaderCategoryIds(socialLinksRow?.headerCategoryIds),
   }
 }
 

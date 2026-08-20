@@ -2,6 +2,7 @@ import Link from "next/link"
 import { FlameIcon, SparklesIcon } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getSiteSettings } from "@/lib/site-settings"
 
 interface NavCategory {
   id: string
@@ -9,14 +10,20 @@ interface NavCategory {
   slug: string
 }
 
-async function getNavCategories(): Promise<NavCategory[]> {
+async function getNavCategories(headerCategoryIds: string[]): Promise<NavCategory[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  let query = supabase
     .from("categories")
     .select("id, name, slug")
     .eq("status", "ACTIVE")
     .is("parent_id", null)
     .order("name")
+
+  if (headerCategoryIds.length > 0) {
+    query = query.in("id", headerCategoryIds)
+  }
+
+  const { data } = await query
 
   return (data ?? []).map((row) => ({
     id: row.id as string,
@@ -26,7 +33,8 @@ async function getNavCategories(): Promise<NavCategory[]> {
 }
 
 export async function StoreCategoryNav() {
-  const categories = await getNavCategories()
+  const settings = await getSiteSettings()
+  const categories = await getNavCategories(settings.headerCategoryIds)
 
   return (
     <nav className="w-full border-b border-border bg-background">

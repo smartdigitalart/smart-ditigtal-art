@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import Autoplay from "embla-carousel-autoplay"
 import {
   Carousel,
   CarouselContent,
@@ -14,6 +15,9 @@ import type { HeroBanner } from "@/lib/types/site-settings"
 export function Hero({ banners }: { banners: HeroBanner[] }) {
   const [api, setApi] = useState<CarouselApi>()
   const [activeIndex, setActiveIndex] = useState(0)
+  const autoplay = useRef(
+    Autoplay({ delay: 2000, stopOnInteraction: false })
+  )
 
   useEffect(() => {
     if (!api) return
@@ -29,7 +33,11 @@ export function Hero({ banners }: { banners: HeroBanner[] }) {
   return (
     <section className="w-full py-8">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Carousel setApi={setApi} opts={{ loop: true }}>
+        <Carousel
+          setApi={setApi}
+          opts={{ loop: true }}
+          plugins={[autoplay.current]}
+        >
           <CarouselContent>
             {banners.map((banner, index) => (
               <CarouselItem key={banner.id}>

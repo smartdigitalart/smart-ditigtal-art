@@ -64,6 +64,7 @@ const settingsSchema = z.object({
         "Enter a valid email address."
       ),
   }),
+  headerCategoryIds: z.array(z.string().min(1)),
 })
 
 export async function getAdminSiteSettingsAction(): Promise<SiteSettings> {
@@ -93,9 +94,10 @@ export async function updateSiteSettingsAction(
   }
 
   const supabase = createAdminClient()
-  const socialLinksWithPromoCards = {
+  const socialLinksWithExtras = {
     ...parsed.data.socialLinks,
     categoryPromoCards: parsed.data.categoryPromoCards,
+    headerCategoryIds: parsed.data.headerCategoryIds,
   }
   const { data, error } = await supabase
     .from("site_settings")
@@ -103,7 +105,7 @@ export async function updateSiteSettingsAction(
       {
         id: "main",
         hero_banners: parsed.data.heroBanners,
-        social_links: socialLinksWithPromoCards,
+        social_links: socialLinksWithExtras,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
@@ -117,6 +119,31 @@ export async function updateSiteSettingsAction(
   revalidatePath("/admin/settings")
 
   return normalizeSiteSettings(data)
+}
+
+export interface HeaderNavCategory {
+  id: string
+  name: string
+  slug: string
+}
+
+export async function getHeaderNavCategoriesAction(): Promise<HeaderNavCategory[]> {
+  await requireAdminProfile()
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name, slug")
+    .eq("status", "ACTIVE")
+    .is("parent_id", null)
+    .order("name")
+
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+    slug: row.slug as string,
+  }))
 }
 
 export async function uploadHeroBannerAction(

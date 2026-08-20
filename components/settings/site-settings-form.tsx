@@ -11,6 +11,7 @@ import {
   uploadCategoryPromoCardAction,
   uploadHeroBannerAction,
 } from "@/app/admin/(protected)/settings/actions"
+import type { HeaderNavCategory } from "@/app/admin/(protected)/settings/actions"
 import { SingleImageUpload } from "@/components/shared/single-image-upload"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Field,
   FieldDescription,
@@ -47,7 +49,13 @@ function newBanner(): HeroBanner {
   }
 }
 
-export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
+export function SiteSettingsForm({
+  settings,
+  categories,
+}: {
+  settings: SiteSettings
+  categories: HeaderNavCategory[]
+}) {
   const [originalImages, setOriginalImages] = useState(
     () =>
       new Set([
@@ -64,7 +72,18 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
   const [socialLinks, setSocialLinks] = useState<SiteSocialLinks>(
     settings.socialLinks
   )
+  const [headerCategoryIds, setHeaderCategoryIds] = useState<string[]>(
+    settings.headerCategoryIds
+  )
   const [saving, setSaving] = useState(false)
+
+  const toggleHeaderCategory = (categoryId: string, checked: boolean) => {
+    setHeaderCategoryIds((current) =>
+      checked
+        ? [...current, categoryId]
+        : current.filter((id) => id !== categoryId)
+    )
+  }
 
   const updateBanner = (id: string, patch: Partial<HeroBanner>) => {
     setHeroBanners((current) =>
@@ -119,10 +138,12 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
         heroBanners,
         categoryPromoCards,
         socialLinks,
+        headerCategoryIds,
       })
       setHeroBanners(saved.heroBanners)
       setCategoryPromoCards(saved.categoryPromoCards)
       setSocialLinks(saved.socialLinks)
+      setHeaderCategoryIds(saved.headerCategoryIds)
       setOriginalImages(
         new Set([
           ...saved.heroBanners.map((banner) => banner.imageUrl),
@@ -216,6 +237,40 @@ export function SiteSettingsForm({ settings }: { settings: SiteSettings }) {
               Add banner
             </Button>
           </CardFooter>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Header categories</CardTitle>
+            <CardDescription>
+              Choose which categories appear in the storefront header nav. Leave
+              all unchecked to show every active category.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No active categories yet.
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {categories.map((category) => (
+                  <label
+                    key={category.id}
+                    className="flex items-center gap-2 text-sm font-medium text-foreground"
+                  >
+                    <Checkbox
+                      checked={headerCategoryIds.includes(category.id)}
+                      onCheckedChange={(checked) =>
+                        toggleHeaderCategory(category.id, checked === true)
+                      }
+                    />
+                    {category.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         <Card className="lg:col-span-2">

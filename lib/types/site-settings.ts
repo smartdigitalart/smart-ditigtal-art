@@ -27,10 +27,12 @@ export interface SiteSettings {
   heroBanners: HeroBanner[]
   categoryPromoCards: CategoryPromoCard[]
   socialLinks: SiteSocialLinks
+  headerCategoryIds: string[]
 }
 
 export interface SiteSettingsPayload {
   heroBanners: HeroBanner[]
   categoryPromoCards: CategoryPromoCard[]
   socialLinks: SiteSocialLinks
+  headerCategoryIds: string[]
 }
