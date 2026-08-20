@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function MyOrderDetailLoading() {
   return (
-    <div className="flex flex-1 flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-12">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
           <Skeleton className="h-8 w-8" />

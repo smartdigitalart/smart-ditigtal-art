@@ -11,7 +11,7 @@ export default async function MyOrdersPage() {
   const orders = await listMyOrdersAction()
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-12">
       <div>
         <h1 className="text-xl font-bold text-foreground">Order history</h1>
         <p className="text-sm text-muted-foreground">

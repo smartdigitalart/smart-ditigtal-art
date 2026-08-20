@@ -15,5 +15,9 @@ export default async function MyOrderDetailPage({
     notFound()
   }
 
-  return <OrderDetail order={order} viewer="customer" />
+  return (
+    <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-12">
+      <OrderDetail order={order} viewer="customer" />
+    </div>
+  )
 }
