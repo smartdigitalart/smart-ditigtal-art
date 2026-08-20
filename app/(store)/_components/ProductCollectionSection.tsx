@@ -21,22 +21,16 @@ function toProduct(row: Record<string, unknown>): FeaturedProduct {
 
 async function getCollectionProducts(collection: ProductCollection): Promise<FeaturedProduct[]> {
   const supabase = await createClient()
+  const flagColumn = collection === "flash-deal" ? "is_flash_deal" : "is_new_arrival"
   const { data } = await supabase
     .from("products")
     .select("id, slug, name, price, sale_price, images")
     .eq("status", "ACTIVE")
+    .eq(flagColumn, true)
     .order("created_at", { ascending: false })
-    .limit(collection === "flash-deal" ? 12 : 4)
+    .limit(4)
 
-  const products = (data ?? []).map(toProduct)
-
-  if (collection === "flash-deal") {
-    return products
-      .filter((product) => product.salePrice !== null && product.salePrice < product.price)
-      .slice(0, 4)
-  }
-
-  return products.slice(0, 4)
+  return (data ?? []).map(toProduct)
 }
 
 const collectionCopy = {

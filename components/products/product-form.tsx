@@ -61,6 +61,8 @@ export interface ProductFormValues {
   inStock: boolean
   status: Product["status"]
   featured: boolean
+  isNewArrival: boolean
+  isFlashDeal: boolean
   description: string
   shortDescription: string
   variants: ProductVariantFormValue[]
@@ -104,6 +106,8 @@ export function ProductForm({ product }: { product?: Product }) {
       inStock: product?.inStock ?? true,
       status: product?.status ?? "ACTIVE",
       featured: product?.featured ?? false,
+      isNewArrival: product?.isNewArrival ?? false,
+      isFlashDeal: product?.isFlashDeal ?? false,
       description: product?.description ?? "",
       shortDescription: product?.shortDescription ?? "",
       variants: (product?.variants ?? []).map((variant) => ({
@@ -553,6 +557,32 @@ export function ProductForm({ product }: { product?: Product }) {
                       checked={watch("featured")}
                       onCheckedChange={(checked) =>
                         setValue("featured", checked)
+                      }
+                    />
+                  </Field>
+
+                  <Field orientation="horizontal" className="justify-between">
+                    <FieldLabel htmlFor="isNewArrival" className="font-normal">
+                      New arrival
+                    </FieldLabel>
+                    <Switch
+                      id="isNewArrival"
+                      checked={watch("isNewArrival")}
+                      onCheckedChange={(checked) =>
+                        setValue("isNewArrival", checked)
+                      }
+                    />
+                  </Field>
+
+                  <Field orientation="horizontal" className="justify-between">
+                    <FieldLabel htmlFor="isFlashDeal" className="font-normal">
+                      Flash deal
+                    </FieldLabel>
+                    <Switch
+                      id="isFlashDeal"
+                      checked={watch("isFlashDeal")}
+                      onCheckedChange={(checked) =>
+                        setValue("isFlashDeal", checked)
                       }
                     />
                   </Field>

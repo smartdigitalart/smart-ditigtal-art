@@ -54,8 +54,14 @@ async function getProducts(
   const supabase = await createClient()
   let query = supabase
     .from("products")
-    .select("id, slug, name, price, sale_price, images")
+    .select("id, slug, name, price, sale_price, images, is_new_arrival, is_flash_deal")
     .eq("status", "ACTIVE")
+
+  if (params.collection === "flash-deal") {
+    query = query.eq("is_flash_deal", true)
+  } else if (params.collection === "new-arrival") {
+    query = query.eq("is_new_arrival", true)
+  }
 
   const q = (params.q ?? "").trim()
   if (q) {
@@ -90,7 +96,7 @@ async function getProducts(
 
   const { data } = await query.order("created_at", { ascending: false })
 
-  const products = (data ?? []).map((row) => {
+  return (data ?? []).map((row) => {
     const images = row.images as { id: string; url: string }[] | null
     return {
       id: row.id as string,
@@ -102,14 +108,6 @@ async function getProducts(
       hoverImage: images?.[1]?.url ?? null,
     }
   })
-
-  if (params.collection === "flash-deal") {
-    return products.filter(
-      (product) => product.salePrice !== null && product.salePrice < product.price
-    )
-  }
-
-  return products
 }
 
 export default async function ShopPage({

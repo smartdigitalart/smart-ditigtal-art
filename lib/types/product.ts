@@ -25,6 +25,8 @@ export interface Product {
   inStock: boolean
   status: (typeof PRODUCT_STATUSES)[number]
   featured: boolean
+  isNewArrival: boolean
+  isFlashDeal: boolean
   description: string
   shortDescription: string
   images: ProductImageRecord[]
@@ -42,6 +44,8 @@ export interface ProductPayload {
   inStock: boolean
   status: Product["status"]
   featured: boolean
+  isNewArrival: boolean
+  isFlashDeal: boolean
   description: string
   shortDescription: string
   images: ProductImageRecord[]
